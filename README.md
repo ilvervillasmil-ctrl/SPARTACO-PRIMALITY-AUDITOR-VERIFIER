@@ -4,7 +4,7 @@
 
 ### DETERMINISTIC PRIMALITY AUDITOR & CERTIFICATE VERIFIER
 
-**Free to use locally · Offline verification · Exact integer arithmetic**
+**Free local verification · Offline operation · Exact integer arithmetic**
 
 *A public mathematical verification tool from SPARTACO SECURITY / OMEGA337\.*
 
@@ -16,89 +16,116 @@
 
 ## Mathematics you can verify
 
-A large integer may be described as prime\. A certificate gives you something more useful: **a finite collection of mathematical claims that an independent verifier can check**\.
+Primality is a mathematical property, not a label assigned by software\. A deterministic certificate makes that distinction concrete: it supplies a finite chain of statements that can be checked using exact integer arithmetic\.
 
-This repository provides a desktop\-oriented auditor, a deterministic certificate verifier, and a collection of **40 JSON certificate files**, including an example labeled **50,381 bits**\. The verification process is designed to use exact integer arithmetic, not probabilistic primality tests or a status asserted by the system that generated the candidate\.
+**SPARTACO / OM337** provides an independent primality\-certificate verifier and mathematical evidence auditor\. It is designed to validate compatible certificates **regardless of which system generated the prime or constructed its proof**\.
 
-You do not need access to the discovery engine to inspect the evidence\.
+The repository also includes **40 JSON certificate files** produced within the SPARTACO SECURITY / OMEGA337 technology line, spanning multiple integer sizes and including a **50,381\-bit** example\. These certificates give users immediately available material for exploring and reproducing the verification process offline\.
 
-> **The discovery engine and the independent verifier are separate components.**
+**The discovery engine and the independent verifier are separate components\.**
+
+## Two complementary capabilities
+
+### 01 — Verify deterministic primality certificates
+
+Load a compatible JSON certificate and let the verifier check its mathematical chain\. The verifier independently recalculates the implemented conditions; it does not accept a prime label, an engine status, or an external assertion as proof\.
+
+The supported TANA certificate nodes include **exact trial division &#40;pinza&#41;, Pocklington, and multi\-Pocklington &#40;T–MA1&#41;**\. A valid chain leads to a deterministic primality verdict\. A malformed, unsupported, or mathematically insufficient chain is not accepted as proof\.
+
+This capability is **not restricted to OM337\-generated primes**\. A prime from another source can be verified when accompanied by a certificate satisfying the verifier’s supported proof format and premises\.
+
+### 02 — Audit integer evidence
+
+Enter an integer and, optionally, provide evidence such as a candidate factor, modular information, or a supported algebraic relation\. The auditor evaluates the supplied evidence and reports whether it establishes compositeness, reveals a contradiction, or remains insufficient\.
+
+**Entering an arbitrary prime without a certificate does not automatically produce a deterministic primality proof\.** This distinction keeps the auditor’s conclusions mathematically meaningful\.
 
 ## What is included
 
-|Component                               |Purpose                                                                                     |
-|----------------------------------------|--------------------------------------------------------------------------------------------|
-|`modules/auditor/auditor_descarte.py`   |Independent mathematical evidence auditor, version 0.9.1                                    |
-|`modules/interfaz/interfaz_3_AUDITOR.py`|Desktop interface with number input, JSON selection, verdicts, and certificate-chain display|
-|`modules/auditor/docs/TANA.md`          |Mathematical documentation of the TANA certification framework                              |
-|`modules/certificates/`                 |40 supplied JSON certificate files across multiple bit lengths                              |
+|Component                               |Role                                                                                                 |
+|----------------------------------------|-----------------------------------------------------------------------------------------------------|
+|`modules/auditor/auditor_descarte.py`   |Independent mathematical auditor and TANA certificate verifier                                       |
+|`modules/interfaz/interfaz_3_AUDITOR.py`|Desktop interface for integer auditing, JSON verification, verdicts, and certificate-chain inspection|
+|`modules/auditor/docs/TANA.md`          |Mathematical description of the certification framework                                              |
+|`modules/certificates/`                 |40 supplied JSON certificates, including the 50,381-bit example                                      |
 
-The auditor exposes six evidence paths: **FACTOR, MODULO, PINZA, TD, RESTO, and TANA**\. Its TANA certificate verifier checks a finite chain using exact arithmetic, including supported **pinza, Pocklington, and multi\-Pocklington &#40;T–MA1&#41;** nodes\.
+The auditor provides six evidence channels: **FACTOR · MODULO · PINZA · TD · RESTO · TANA**\. Each has a defined role; the certificate channel is responsible for deterministic primality certification through a verified proof chain\.
 
-## Try the certificates
+## Run the verifier locally
 
-1. Clone or download this repository\.
-2. Install Python 3\.11\+ and the desktop dependency: `python -m pip install pywebview`\.
-3. Launch the application using the project’s `run.py` bootstrap **if it has been added to your checkout**\. Otherwise, launch the interface after configuring the Python import path so it can find `modules/auditor/auditor_descarte.py`\.
-4. Open **JSON Certificate**, select a file from `modules/certificates/`, and choose **Verify Certificate**\.
-5. Inspect the mathematical verdict and, on successful verification, the certificate chain\.
+**Requirements:** Python 3\.11\+; `pywebview` for the desktop interface\.
 
-For a command\-line check, the auditor also exposes a direct certificate entry point\. From the repository root, run:
+```bash
+python -m pip install pywebview
+```
+
+If your checkout includes the application bootstrap, start the desktop application from the repository root:
+
+```bash
+python run.py
+```
+
+The supplied repository snapshot may not contain `run.py`; in that case, use the auditor directly or add the bootstrap before launching the GUI\.
+
+### Verify a supplied certificate from the command line
 
 ```bash
 python modules/auditor/auditor_descarte.py modules/certificates/OM337_prime_1024bits_9d4faafa2400d5c2.json
 ```
 
-For the largest supplied example, select:
+### Explore the 50,381\-bit certificate
 
 ```text
 modules/certificates/OM337_prime_50381bits_5c3a1980b8645775.json
 ```
 
-Verification time depends on integer size, hardware, and arithmetic backend\. A file name or a claimed bit length is not itself proof of primality; **the verdict comes from checking the certificate**\.
+### Verify your own certificate
 
-## What the verifier establishes
+Supply a compatible JSON certificate to the same command\-line verifier or select it in the desktop interface\. The candidate may come from OM337 or from another mathematical workflow; acceptance depends on the proof, not its origin\.
 
-A valid certificate is accepted only when the verifier’s implemented mathematical premises hold\. The verifier does not rely on the generating engine’s declaration that a number is prime\.
+Verification time depends on certificate size, hardware, and the arithmetic implementation\.
 
-The number\-auditing interface can also examine supplied evidence of compositeness, such as a nontrivial divisor\. **An inconclusive audit is not a primality certificate\.**
+## The technology behind the certificates
 
-This is an independently inspectable verification workflow, not a claim that every possible prime can be certified from an arbitrary input without a suitable proof\.
+**SPARTACO SECURITY** is the broader security and mathematical software technology line\. **OMEGA337** is the originating computational architecture associated with the supplied prime results and their deterministic certificates\.
 
-## The technology behind the evidence
+This public repository presents a deliberately separate capability: **independent mathematical verification**\. Users can examine the certificate structure and reproduce the verifier’s checks without requiring access to the proprietary discovery and certificate\-production engine\.
 
-**SPARTACO SECURITY / OMEGA337** is the originating research and software line associated with this public auditor and its supplied certificates\.
+The distinction matters:
 
-This repository intentionally separates two activities:
+- **OMEGA337:** produces prime results and their supporting certification artifacts within the originating technology line\.
+- **UIS–TANA:** defines the mathematical certification structure used by the supplied proofs\.
+- **AUDITOR\_DESCARTE:** independently checks the supported mathematical conditions and issues the resulting verdict\.
 
-- **Discovery and certificate production** — the originating technology, not distributed here\.
-- **Independent certificate verification** — the public mathematical component provided here\.
+The verifier is a useful tool in its own right, not merely a viewer for OM337 output\.
 
-That separation is deliberate\. A mathematical result becomes more useful when others can check its evidence without needing the system that produced it\.
+**SPARTACO SECURITY / OMEGA337 — originating technology and research:** &#91;Insert official project repository link&#93;
 
-**Explore the broader SPARTACO SECURITY / OMEGA337 project:** add the official repository or organization link here before publication\.
+## Inspect the mathematics
 
-## Who this is for
+A deterministic verification workflow is designed to be reproducible\. Users can inspect the JSON nodes, trace their dependencies, and compare each mathematical condition against the implemented verifier and the accompanying TANA documentation\.
 
-Researchers, developers, cryptographic engineers, students, and anyone interested in reproducible mathematical evidence can inspect the source, run the verifier locally, and explore the supplied certificate chains\.
+The verification process uses exact integer arithmetic rather than probabilistic primality tests\. It does not trust the generating engine’s declared state\.
 
-The supplied primes and certificates are research artifacts\. Their presence does **not** imply that they are suitable for cryptographic key generation, and this project is not a substitute for a reviewed cryptographic library or a secure prime\-generation procedure\.
+The supplied certificate collection illustrates the workflow across different bit lengths\. The public verifier also accepts compatible certificates supplied independently by users\.
 
-## Project status and trust
+## Intended audience
 
-**Auditor:** v0\.9\.1 · **Contract:** VPSI\-CONTRACT\-1\.0 · **Status:** Development / public candidate\.
+This project is intended for mathematical researchers, software engineers, cryptographic developers, educators, and anyone who wants to examine deterministic primality evidence locally\.
 
-The repository contains 40 certificate files\. Their inclusion should not be interpreted as a published, independently reproduced batch\-validation report\. Verification results should be reproduced and recorded per file, ideally through an automated test suite\.
+A certified prime is a mathematical result\. It is **not automatically a secure cryptographic key**, and the verifier is not a replacement for a security\-reviewed key\-generation system\.
 
-The desktop interface requires `pywebview`; packaging into a native executable and cross\-platform GUI testing are separate release steps\.
+## Project information
 
-## Attribution and licensing
-
+**Auditor:** v0\.9\.1
+**Verification contract:** VPSI\-CONTRACT\-1\.0
+**Execution model:** Local / offline
 **Author and intellectual\-property owner:** Ilver Villasmil
 **Technology:** SPARTACO SECURITY / OMEGA337
-**Copyright © 2026 Ilver Villasmil\. All rights reserved\.**
 
-**Before redistribution:** publish the actual license terms\. Free availability and public source visibility do not automatically grant permission to modify, redistribute, or use the code commercially\. A dedicated license for the public verifier can coexist with proprietary rights in the separate discovery engine\.
+Copyright © 2026 Ilver Villasmil\. All rights reserved\.
+
+The public auditor and the separate proprietary engine may have different licensing terms\. Add the applicable public\-verifier license before offering redistribution or modification rights\. Public availability alone does not establish an open\-source license\.
 
 ---
 
