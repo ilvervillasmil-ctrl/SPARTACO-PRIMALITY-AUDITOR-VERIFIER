@@ -1,4 +1,47 @@
-#!/usr/bin/env python3
+# =============================================================================
+# SPARTACO SECURITY | OMEGA337
+# =============================================================================
+# MODULE      : run.py
+# COMPONENT   : APPLICATION BOOTSTRAP & LAUNCHER
+# SYSTEM      : SPARTACO PRIMALITY AUDITOR & VERIFIER
+# ARCHITECTURE: UIS–TANA–OMEGA
+# VERSION     : 1.0.0
+# EXECUTION   : LOCAL / OFFLINE / DETERMINISTIC
+# =============================================================================
+#
+# PURPOSE
+# -------
+# Provides the official application entry point for the SPARTACO
+# deterministic primality auditor and mathematical certificate verifier.
+#
+# RESPONSIBILITIES
+# ----------------
+# - Initialize the standalone application environment.
+# - Resolve internal module paths and dependencies.
+# - Validate application startup requirements.
+# - Launch the graphical auditing interface.
+# - Connect the interface to the independent mathematical auditor.
+#
+# SECURITY MODEL
+# --------------
+# - No external server or internet connection required.
+# - No private prime-generation engine is loaded or exposed.
+# - Mathematical verification remains isolated in auditor_descarte.py.
+# - Certificate validation relies on exact integer arithmetic.
+# - The bootstrap does not issue primality verdicts.
+#
+# INTELLECTUAL PROPERTY
+# ---------------------
+# Copyright (c) 2026 Ilver Villasmil.
+# SPARTACO SECURITY / OMEGA337.
+# All rights reserved.
+#
+# Distribution, modification, and commercial use are subject to the
+# applicable software license.
+#
+# =============================================================================
+# END OF MODULE HEADER
+# =============================================================================
 """SPARTACO / OM337 — offline desktop application bootstrap.
 Copyright (c) 2026 Ilver Villasmil.
 """
