@@ -1,0 +1,75 @@
+{
+  "esquema": "OMEGA337-CANON-1",
+  "schema": "OMEGA337-CANON-1",
+  "titulo": "Certificado OMEGA 337 — Primo de 128 bits",
+  "title": "OMEGA 337 Certificate — 128-bit prime",
+  "emisor": "Certificado por OMEGA 337",
+  "issuer": "Certified by OMEGA 337",
+  "nombre": "OM337_prime_128bits_dccbf5d744e5f7e1",
+  "name": "OM337_prime_128bits_dccbf5d744e5f7e1",
+  "archivo": "OM337_prime_128bits_dccbf5d744e5f7e1.json",
+  "file": "OM337_prime_128bits_dccbf5d744e5f7e1.json",
+  "identidad": {
+    "bits_N": 128,
+    "sha256_N": "dccbf5d744e5f7e11df709470b26f9c7122adcaf7e2b7a38fce39d7ec98675c4",
+    "algoritmo_sha256_N": "SHA256-ASCII-DECIMAL-v1",
+    "algorithm_sha256_N": "SHA256-ASCII-DECIMAL-v1",
+    "sha256_arbol": "ff8c6182fdf4595589cd3577fd6d0661d1c042abb8ba17f3e69b2f3be365e1db",
+    "sha256_tree": "ff8c6182fdf4595589cd3577fd6d0661d1c042abb8ba17f3e69b2f3be365e1db",
+    "algoritmo_sha256_arbol": "OM337-JSON-SORTED-UTF8-v1",
+    "algorithm_sha256_tree": "OM337-JSON-SORTED-UTF8-v1"
+  },
+  "identity": {
+    "$ref": "#/identidad"
+  },
+  "certificado": {
+    "N": "175754133686697395850355057345863516181",
+    "mecanismo": "escalera T-C1(+) (Pocklington EXTERNO), construcción del motor",
+    "mechanism": "T-C1(+) ladder (EXTERNAL Pocklington), engine construction",
+    "arbol": [
+      {
+        "n": "2147483929",
+        "tipo": "pinza",
+        "type": "pinza",
+        "regla": "hoja (cierre de la Pinza)",
+        "rule": "hoja (cierre de la Pinza)"
+      },
+      {
+        "n": "2376028166681842511",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "2147483929",
+        "u": "1106424190",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      },
+      {
+        "n": "2929235561444956597505917622431058603",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "2376028166681842511",
+        "u": "1232828634997065782",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      },
+      {
+        "n": "175754133686697395850355057345863516181",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "2929235561444956597505917622431058603",
+        "u": "60",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      }
+    ],
+    "tree": {
+      "$ref": "#/certificado/arbol"
+    }
+  },
+  "certificate": {
+    "$ref": "#/certificado"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "esquema": "OMEGA337-CANON-1",
+  "schema": "OMEGA337-CANON-1",
+  "titulo": "Certificado OMEGA 337 — Primo de 3 bits",
+  "title": "OMEGA 337 Certificate — 3-bit prime",
+  "emisor": "Certificado por OMEGA 337",
+  "issuer": "Certified by OMEGA 337",
+  "nombre": "OM337_prime_3bits_ef2d127de37b942b",
+  "name": "OM337_prime_3bits_ef2d127de37b942b",
+  "archivo": "OM337_prime_3bits_ef2d127de37b942b.json",
+  "file": "OM337_prime_3bits_ef2d127de37b942b.json",
+  "identidad": {
+    "bits_N": 3,
+    "sha256_N": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d",
+    "algoritmo_sha256_N": "SHA256-ASCII-DECIMAL-v1",
+    "algorithm_sha256_N": "SHA256-ASCII-DECIMAL-v1",
+    "sha256_arbol": "6cc72aafb66aac0e4036346f147d79216e56816a05e94e13a074cedaab3c2e96",
+    "sha256_tree": "6cc72aafb66aac0e4036346f147d79216e56816a05e94e13a074cedaab3c2e96",
+    "algoritmo_sha256_arbol": "OM337-JSON-SORTED-UTF8-v1",
+    "algorithm_sha256_tree": "OM337-JSON-SORTED-UTF8-v1"
+  },
+  "identity": {
+    "$ref": "#/identidad"
+  },
+  "certificado": {
+    "N": "5",
+    "arbol": [
+      {
+        "tipo": "pinza",
+        "type": "pinza",
+        "n": "5"
+      }
+    ],
+    "tree": {
+      "$ref": "#/certificado/arbol"
+    }
+  },
+  "certificate": {
+    "$ref": "#/certificado"
+  }
+}

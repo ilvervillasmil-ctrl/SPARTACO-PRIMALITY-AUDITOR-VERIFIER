@@ -1,0 +1,95 @@
+{
+  "esquema": "OMEGA337-CANON-1",
+  "schema": "OMEGA337-CANON-1",
+  "titulo": "Certificado OMEGA 337 — Primo de 512 bits",
+  "title": "OMEGA 337 Certificate — 512-bit prime",
+  "emisor": "Certificado por OMEGA 337",
+  "issuer": "Certified by OMEGA 337",
+  "nombre": "OM337_prime_512bits_b32670a81e9c2d2d",
+  "name": "OM337_prime_512bits_b32670a81e9c2d2d",
+  "archivo": "OM337_prime_512bits_b32670a81e9c2d2d.json",
+  "file": "OM337_prime_512bits_b32670a81e9c2d2d.json",
+  "identidad": {
+    "bits_N": 512,
+    "sha256_N": "b32670a81e9c2d2d5c9878651ad4918db3271b27089aebb778028022f6188167",
+    "algoritmo_sha256_N": "SHA256-ASCII-DECIMAL-v1",
+    "algorithm_sha256_N": "SHA256-ASCII-DECIMAL-v1",
+    "sha256_arbol": "7eb46d51c6e77785c6e279c84b908f2d6731f49884cf0f450d224695283df1a0",
+    "sha256_tree": "7eb46d51c6e77785c6e279c84b908f2d6731f49884cf0f450d224695283df1a0",
+    "algoritmo_sha256_arbol": "OM337-JSON-SORTED-UTF8-v1",
+    "algorithm_sha256_tree": "OM337-JSON-SORTED-UTF8-v1"
+  },
+  "identity": {
+    "$ref": "#/identidad"
+  },
+  "certificado": {
+    "N": "7413263254824622460581301328921938165603489828121527585816811635867213313212704049979638979165931902050927293008208605486658711767933736108409951439978581",
+    "mecanismo": "escalera T-C1(+) (Pocklington EXTERNO), construcción del motor",
+    "mechanism": "T-C1(+) ladder (EXTERNAL Pocklington), engine construction",
+    "arbol": [
+      {
+        "n": "2147483929",
+        "tipo": "pinza",
+        "type": "pinza",
+        "regla": "hoja (cierre de la Pinza)",
+        "rule": "hoja (cierre de la Pinza)"
+      },
+      {
+        "n": "2376028166681842511",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "2147483929",
+        "u": "1106424190",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      },
+      {
+        "n": "2929235561444956597505917622431058603",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "2376028166681842511",
+        "u": "1232828634997065782",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      },
+      {
+        "n": "3890572939481267293712950813056121366969467391881314382903876124305301387",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "2929235561444956597505917622431058603",
+        "u": "1328187118403715730616464450439356062",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      },
+      {
+        "n": "6653104425749084380805992805391049062271806153569671294300659020634277893321150423673311002233841524077169907942189712702766158807969125619639733",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "3890572939481267293712950813056121366969467391881314382903876124305301387",
+        "u": "1710057754793346007248253862235965674402440674857690478617477521219905436",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      },
+      {
+        "n": "7413263254824622460581301328921938165603489828121527585816811635867213313212704049979638979165931902050927293008208605486658711767933736108409951439978581",
+        "tipo": "pock",
+        "type": "pock",
+        "F": "6653104425749084380805992805391049062271806153569671294300659020634277893321150423673311002233841524077169907942189712702766158807969125619639733",
+        "u": "1114256260",
+        "a": "2",
+        "regla": "escalera T-C1(+)",
+        "rule": "escalera T-C1(+)"
+      }
+    ],
+    "tree": {
+      "$ref": "#/certificado/arbol"
+    }
+  },
+  "certificate": {
+    "$ref": "#/certificado"
+  }
+}
