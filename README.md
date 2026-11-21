@@ -164,10 +164,17 @@ A certified prime is a mathematical result\. It is **not automatically a secure 
 **Author and intellectual\-property owner:** Ilver Villasmil
 **Technology:** SPARTACO SECURITY / OMEGA337
 
-Copyright © 2026 Ilver Villasmil\. All rights reserved\.
+Licensing
 
-The public auditor and the separate proprietary engine may have different licensing terms\. Add the applicable public\-verifier license before offering redistribution or modification rights\. Public availability alone does not establish an open\-source license\.
+SPARTACO Primality Auditor & Verifier is available free of charge for personal, educational, and non-commercial research use under the SPARTACO SECURITY Community License.
 
+Commercial use, enterprise deployment, product integration, commercial redistribution, and commercial exploitation of modified versions require a separate commercial license.
+
+The auditor is distributed independently of the proprietary SPARTACO SECURITY, OM337, and UIS–OMEGA technologies.
+
+Copyright © 2026 Ilver Villasmil. All rights reserved except as expressly licensed.
+
+For commercial licensing and enterprise agreements, contact the rights holder through the official SPARTACO SECURITY licensing channel.
 ---
 
 <div align="center">
