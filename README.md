@@ -14,6 +14,47 @@
 
 ---
 
+
+## The SPARTACO Technology Family
+
+**SPARTACO SECURITY** is a proprietary security architecture developed by Ilver Villasmil. It brings together cryptographic protection, identity and authorization controls, mathematical computation, and independently verifiable evidence.
+
+Its components serve distinct purposes within a common technological framework.
+
+```text
+                  SPARTACO SECURITY
+             Unified Security Architecture
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+        OM337          UIS–OMEGA       MATHEMATICAL
+     Cryptographic     Mathematical     CERTIFICATION
+        Engine           Engine           UIS–TANA
+          │                │                │
+          └────────────────┼────────────────┘
+                           │
+                INDEPENDENT AUDITOR
+               Public · Free · Offline
+```
+
+### Core Technologies
+
+**OM337 — Cryptographic Engine.** A specialized cryptographic component operating on structured bit transformations, with defined encryption and decryption procedures.
+
+**UIS–OMEGA — Mathematical Engine.** A mathematical framework for prime-number construction, analysis, and deterministic certification through verifiable arithmetic evidence.
+
+**UIS–TANA — Mathematical Certification.** A nodal-algebraic framework combining certified dependencies, number-theoretic conditions, and finite proof chains to establish primality.
+
+**SPARTACO Primality Auditor — Independent Verifier.** The public tool provided in this repository. It independently checks mathematical evidence and compatible primality certificates, including those produced by UIS–OMEGA, without requiring access to the proprietary engine.
+
+### One Architecture. Distinct Capabilities.
+
+**Independently verifiable mathematics.**
+
+The auditor is freely available as a public verification instrument. The underlying proprietary technologies remain separate from its distribution.
+
+---
+
 ## Mathematics you can verify
 
 Primality is a mathematical property, not a label assigned by software\. A deterministic certificate makes that distinction concrete: it supplies a finite chain of statements that can be checked using exact integer arithmetic\.
