@@ -5,6 +5,10 @@ Auditor v0.9.1 · Verification contract VPSI-CONTRACT-1.0 · Offline · English 
 
 ---
 
+<img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/bf792d9f-d3dd-48b7-91b8-ec3381a8084b" />
+
+
+
 ## 1. Overview
 
 The interface is the screen of the auditor. It lets a user run every evidence channel of the auditor on an integer, load a JSON primality certificate, and inspect the result and the certification chain.
@@ -26,6 +30,8 @@ The interface is the screen of the auditor. It lets a user run every evidence ch
 - Loads a **JSON certificate** from the user's disk or from the certificates folder of this repository (`modules/certificates/`, 40 supplied files).
 - Verifies the certificate's **TANA chain** with exact integer arithmetic and shows **N**, the bit length, the node count and every node of the chain.
 - Runs entirely offline.
+
+<img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/6bf8adcd-1467-4925-96d1-681e73c26ea4" />
 
 ## 3. What the interface does not do
 
@@ -67,6 +73,8 @@ The auditor processes contradictions first, then compositeness evidence, then th
 | `CONTRADICCION_DETECTADA` | The evidence contradicts itself (for example, 2p + d does not equal N) |
 
 Verdict names are identifiers of the verification contract and appear unchanged in both languages.
+
+<img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/eb2c9788-3949-4845-a95e-6c0e5e1a71b3" />
 
 ## 7. Certificates
 
