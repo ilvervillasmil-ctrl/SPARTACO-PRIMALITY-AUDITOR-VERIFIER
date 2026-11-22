@@ -171,7 +171,7 @@ $$
 
 ### Proposition 1 — Exact detection of composition
 
-Let $N$ be an integer greater than or equal to 2, and let $d$ be one of the divisors examined by FDP.
+Let $N$ be an integer with $N \ge 2$, and let $d$ be one of the divisors examined by FDP.
 
 If:
 
@@ -241,7 +241,7 @@ The order $(3, 2, 7, 5)$ is an **explicit evaluation policy**. The example of 30
 
 ---
 
-## 8. Conclusion
+## 8. Conclusion of the Base Case
 
 The construction:
 
@@ -257,13 +257,13 @@ This supports three design decisions of FDP:
 2. Apply **exact divisibility**, without resorting to inferences based on algebraic appearance.
 3. **Stop evaluation at the first proper divisor found**, avoiding unnecessary subsequent operations.
 
-Mathematical result of the case:
+Mathematical result of the base case:
 
 $$
 \boxed{\text{FDP}(309) = (\text{COMPOSITE},\, 3,\, 103)}
 $$
 
-The case constitutes a verifiable justification of the correctness and early termination of the filter.
+The case constitutes a verifiable justification of the correctness and early termination of the filter. Sections 9 and 10 extend the analysis to two complementary operations on the candidate: scalar multiplication and additive shift.
 
 ---
 
@@ -335,8 +335,6 @@ $$
 
 ### Family of candidates and first-check behavior
 
-For $N_k = 309 \cdot 7^k$:
-
 | $k$ | $N_k = 309 \cdot 7^k$ | First check | Quotient | Verdict |
 |:---:|:----------------------:|:-----------:|:--------:|:-------:|
 | 0 | 309 | $309 \bmod 3 = 0$ | 103 | COMPOSITE |
@@ -355,6 +353,111 @@ $$
 $$
 
 The size of the candidate grows with $k$; the position of the detected divisor within $D$ does not change.
+
+---
+
+## 10. Controlled Divisor Selection via Additive Shifts
+
+Section 9 established that scalar multiplication preserves an existing divisor and leaves the position of the detected divisor within $D$ invariant. The present section establishes the dual behavior: an additive shift modifies the residue class of the candidate, and therefore may change the position within $D$ at which FDP first detects a divisor.
+
+### 10.1 Base construction
+
+Let:
+
+$$
+B = 17 \times 13 \times 37 \times 103 = 842{,}231
+$$
+
+The base is the product of four primes. Its residue modulo 3 is:
+
+$$
+842{,}231 \bmod 3 = 2
+$$
+
+### 10.2 Proposition 6 — Congruence under additive shift
+
+Let $B, a, d \in \mathbb{Z}$ with $d \ge 2$. Then:
+
+$$
+(B + a) \bmod d = \big((B \bmod d) + (a \bmod d)\big) \bmod d
+$$
+
+**Proof.** Direct consequence of the compatibility of congruence with addition. $\blacksquare$
+
+### 10.3 Corollary 6.1 — Residue class dependence
+
+For fixed $B$ and fixed $d \ge 2$, the residue $(B + a) \bmod d$ depends only on the residue class $a \bmod d$.
+
+**Proof.** By Proposition 6, the value $(B + a) \bmod d$ is determined by $B \bmod d$ and $a \bmod d$. The former is fixed; the latter is invariant under changes of $a$ within its residue class modulo $d$. $\blacksquare$
+
+### 10.4 Application to the base $B = 842{,}231$
+
+With $B \bmod 3 = 2$ and $d = 3$, Proposition 6 specializes to:
+
+$$
+(B + a) \bmod 3 = (2 + a \bmod 3) \bmod 3
+$$
+
+Three cases follow:
+
+- If $a \equiv 1 \pmod 3$: $(B + a) \bmod 3 = (2 + 1) \bmod 3 = 0$.
+- If $a \equiv 2 \pmod 3$: $(B + a) \bmod 3 = (2 + 2) \bmod 3 = 1$.
+- If $a \equiv 0 \pmod 3$: $(B + a) \bmod 3 = (2 + 0) \bmod 3 = 2$.
+
+### 10.5 Case study: shifts $a \in \{1, 3, 4, 7\}$
+
+The shifts $1, 4, 7$ satisfy $a \equiv 1 \pmod 3$ and therefore produce candidates divisible by 3. The shift $3$ satisfies $a \equiv 0 \pmod 3$ and produces a candidate with residue 2 modulo 3, which FDP then examines modulo 2.
+
+| $a$ | $a \bmod 3$ | $B + a$ | First FDP divisor | Quotient | Checks executed |
+|:---:|:-----------:|:-------:|:-----------------:|:--------:|:---------------:|
+| 1 | 1 | 842,232 | 3 | 280,744 | 1 |
+| 4 | 1 | 842,235 | 3 | 280,745 | 1 |
+| 7 | 1 | 842,238 | 3 | 280,746 | 1 |
+| 3 | 0 | 842,234 | 2 | 421,117 | 2 |
+
+FDP verdicts:
+
+```text
+FDP(842232) = ("COMPOSITE", 3, 280744)   # 1 check
+FDP(842235) = ("COMPOSITE", 3, 280745)   # 1 check
+FDP(842238) = ("COMPOSITE", 3, 280746)   # 1 check
+FDP(842234) = ("COMPOSITE", 2, 421117)   # 2 checks
+```
+
+### 10.6 Quantification of FDP execution
+
+- Candidates evaluated: $4$.
+- Candidates classified as composite by FDP: $4/4$.
+- Checks executed under early termination: $1 + 1 + 1 + 2 = 5$.
+- Checks under full evaluation of all four divisors: $4 \times 4 = 16$.
+- Checks avoided: $16 - 5 = 11$.
+- Reduction in divisibility checks: $11/16 = 68.75\%$.
+
+### 10.7 Proposition 7 — Dual behavior with respect to Section 9
+
+The FDP filter satisfies the following two complementary properties:
+
+**(i) Multiplicative invariance.** If $d \mid N$, then $d \mid (N \cdot m)$ for every integer $m \ge 1$ (Proposition 4). Multiplication preserves every existing divisor of $N$.
+
+**(ii) Additive displacement.** If $a_1 \equiv a_2 \pmod d$, then $(B + a_1) \equiv (B + a_2) \pmod d$ (Corollary 6.1). Conversely, if $a_1 \not\equiv a_2 \pmod d$, the residue class of the candidate modulo $d$ may differ, and the position within $D$ at which FDP first detects a divisor may change accordingly.
+
+**Proof.** Part (i) is Proposition 4. Part (ii) is Corollary 6.1. $\blacksquare$
+
+### 10.8 Formal consequence
+
+For a fixed base $B$, the additive term $a$ acts as a control parameter on the residue class of the candidate $B + a$ modulo each divisor in $D$, and therefore on the position within $D$ at which FDP first detects a divisor.
+
+In the case $B = 842{,}231$:
+
+$$
+\boxed{\forall a \in \{1, 4, 7\},\quad \text{FDP}(B + a) = (\text{COMPOSITE},\, 3,\, (B + a)/3)}
+$$
+
+$$
+\boxed{\text{FDP}(B + 3) = (\text{COMPOSITE},\, 2,\, (B + 3)/2)}
+$$
+
+The four candidates lie within an interval of width $6$. The residue class of the additive shift, not the magnitude of the candidate, determines which divisor FDP detects first. FDP executes this classification through exact integer arithmetic and terminates at the first successful check, consistent with Proposition 3.
 
 ---
 
