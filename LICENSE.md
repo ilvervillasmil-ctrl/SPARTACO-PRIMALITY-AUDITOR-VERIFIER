@@ -1,6 +1,4 @@
-<img width="1204" height="268" alt="image" src="https://github.com/user-attachments/assets/f941cd17-261b-442f-b268-e27e330962fe" />
-
-
+<img width="1111" height="513" alt="image" src="https://github.com/user-attachments/assets/dd008bcb-95d0-4b4c-8014-5e2e9a593a86" />
 
 
 SPARTACO PRIMALITY AUDITOR COMMUNITY LICENSE
