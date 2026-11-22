@@ -21,7 +21,7 @@
 
 Its components serve distinct purposes within a common technological framework.
 
-<img width="1168" height="784" alt="image" src="https://github.com/user-attachments/assets/1ce44e89-07bd-49bf-be7e-52ee9293e5a9" />
+<img width="1398" height="736" alt="image" src="https://github.com/user-attachments/assets/38391d84-892a-49cb-ac7f-6b23046e77d2" />
 
 
 
@@ -196,7 +196,8 @@ For commercial licensing and enterprise agreements, contact the rights holder th
 Email: Ilvervillasmil@gmail.com
 Phone: +1 (512) 923-7344
 
-<img width="1172" height="237" alt="image" src="https://github.com/user-attachments/assets/ebc1755f-1179-43ff-9a5b-7b4864f390f8" />
+<img width="1204" height="268" alt="image" src="https://github.com/user-attachments/assets/b918fcfa-4a97-49eb-b572-93f50d69d3f2" />
+
 
 
 ---
