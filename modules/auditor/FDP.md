@@ -1,8 +1,8 @@
+<div align="center">
 
+# SPARTACO / FDP
 
-### SPARTACO / FDP
-
-## DETERMINISTIC PRELIMINARY FILTER — B1
+### DETERMINISTIC PRELIMINARY FILTER — B1
 
 **Exact divisibility · Sequential divisor evaluation · Early termination**
 
@@ -10,6 +10,7 @@
 
 **Inspect the algebra. Verify the residues. Confirm the verdict.**
 
+</div>
 
 ---
 
@@ -263,6 +264,85 @@ $$
 $$
 
 The case constitutes a verifiable justification of the correctness and early termination of the filter.
+
+---
+
+## 9. Extension: Scaling Without Losing the Factor 3
+
+Exactly. This extension reinforces the justification of FDP, because it shows that we can increase the number considerably **without losing its divisibility by 3**.
+
+We start from:
+
+$$
+309 = 3 \times 103
+$$
+
+Multiply by three additional factors of 7:
+
+$$
+N = 309 \times 7 \times 7 \times 7
+$$
+
+$$
+\boxed{N = 105{,}987}
+$$
+
+Now we apply the first FDP check:
+
+$$
+105{,}987 \div 3 = \boxed{35{,}329}
+$$
+
+Exact division. **Composition identified on the very first check.**
+
+And there is something even more interesting:
+
+$$
+35{,}329 = 103 \times 7^3
+$$
+
+Therefore:
+
+$$
+\boxed{105{,}987 = 3 \times 103 \times 7^3}
+$$
+
+### Mathematical closing argument for justification B1
+
+The original construction contains factors of 7 and 2, combined through sums, and produces the number 309, which is divisible by 3.
+
+Subsequently, by multiplying that result by $7^3$, we obtain 105,987 — a considerably larger number that **preserves the factor 3**.
+
+The mathematical reason is:
+
+$$
+3 \mid 309 \quad \Longrightarrow \quad 3 \mid (309 \times 7^k)
+$$
+
+for any integer $k \ge 0$.
+
+This means we can construct a **complete family of composite numbers**:
+
+$$
+\boxed{N_k = 309 \times 7^k}
+$$
+
+And FDP will detect them **always on its first check**, regardless of how much they grow.
+
+### Family of candidates — first FDP check
+
+| $k$ | Candidate $N_k = 309 \times 7^k$ | First check | Verdict |
+|:---:|:---------------------------------:|:-----------:|:-------:|
+| 0 | 309 | $309 \div 3 = 103$ | COMPOSITE |
+| 1 | 2,163 | $2{,}163 \div 3 = 721$ | COMPOSITE |
+| 2 | 15,141 | $15{,}141 \div 3 = 5{,}047$ | COMPOSITE |
+| 3 | 105,987 | $105{,}987 \div 3 = 35{,}329$ | COMPOSITE |
+
+### Conclusion for SPARTACO
+
+Increasing the size of a candidate by multiplying it with additional factors **does not eliminate a divisor it already has**. FDP can recognize that composition with a single divisibility test by 3, without traversing the remaining divisors and without starting the auditor.
+
+That is a mathematically solid closing argument for this example.
 
 ---
 
