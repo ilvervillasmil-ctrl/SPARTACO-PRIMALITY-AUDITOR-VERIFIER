@@ -10,76 +10,103 @@ This is a source-available license. It is NOT an open-source license.
 1. DEFINITIONS
 --------------------------------------------------------------------------------
 
-"Licensor" means Ilver Villasmil, author and owner of the Licensed Materials.
+“Licensor” means Ilver Villasmil, author and copyright owner of the Licensed Materials.
 
-"Licensed Materials" means, collectively:
-  (a) the Software: the Python source code of the SPARTACO Primality Auditor
-      & Verifier, including the auditor module, the desktop interface module,
-      the launcher, and any executable or package built from them by or with
-      the authorization of the Licensor;
-  (b) the Certificates: the JSON certificate files distributed with the
-      Software;
-  (c) the Documentation: the README and the TANA.md document, and any other
-      documentation distributed with the Software.
+“Licensed Materials” means, collectively:
 
-"You" means the individual or entity exercising rights under this License.
+(a) “Software”: The Python source code of the SPARTACO Primality Auditor & Verifier, including the mathematical auditor module, desktop interface module, launcher, and any executable or package built from them by or with the authorization of the Licensor.
 
-"Non-Commercial Use" means use that is only one or more of the following, and
-that is not intended for or directed toward commercial advantage, monetary
-compensation, or any commercial activity of any kind:
-  (i)   personal use by an individual;
-  (ii)  educational use, including teaching, study and coursework;
-  (iii) non-commercial research, including academic and independent
-        mathematical research whose results are not sold or used to provide a
-        paid product or service.
+(b) “Certificates”: The JSON mathematical certificate files distributed with the Software.
 
-"Commercial Use" means any use that is not Non-Commercial Use. Without
-limitation, Commercial Use includes:
-  (i)   use by or on behalf of a company, firm, or other organization that
-        operates for profit, INCLUDING INTERNAL USE that is neither sold nor
-        redistributed;
-  (ii)  enterprise deployment;
-  (iii) integration of the Licensed Materials into a product, service, or
-        workflow offered to others;
-  (iv)  commercial redistribution of the Licensed Materials, in original or
-        modified form;
-  (v)   commercial exploitation of modified versions;
-  (vi)  offering the Licensed Materials, or results produced by them, as part
-        of a paid product or service.
+(c) “Documentation”: The README, TANA.md, and any other documentation distributed with the Software and expressly covered by this License.
+
+“You” means any individual, institution, company, organization, or other legal entity exercising rights under this License.
+
+“Non-Commercial Use” means use of the Licensed Materials for personal, educational, academic, or independent research purposes that is not directed toward commercial exploitation, monetary compensation, or the provision of a paid product or service.
+
+Non-Commercial Use includes:
+
+(i) Personal use by individuals.
+
+(ii) Educational use, including teaching, study, coursework, and academic demonstrations.
+
+(iii) Independent mathematical research and non-commercial academic research.
+
+(iv) Non-commercial verification and analysis of mathematical certificates.
+
+“Permitted Evaluation Use” means downloading, installing, executing, inspecting, studying, testing, benchmarking, and independently auditing the Licensed Materials for the purpose of understanding, evaluating, validating, or assessing their mathematical correctness, functionality, security, performance, compatibility, or suitability.
+
+Permitted Evaluation Use is expressly available, free of charge, to individuals, universities, academic institutions, independent researchers, private companies, commercial organizations, and enterprise security or research teams, regardless of their commercial or non-commercial status.
+
+Permitted Evaluation Use includes:
+
+(i) Downloading, installing, executing, and inspecting the Software.
+
+(ii) Reviewing and auditing the source code and mathematical verification procedures.
+
+(iii) Verifying, examining, and reproducing the results of the Certificates.
+
+(iv) Conducting internal technical evaluations, security assessments, mathematical tests, benchmarks, and compatibility tests.
+
+(v) Performing proof-of-concept evaluations and independent validation of the Software’s capabilities.
+
+(vi) Creating and testing modifications solely for internal evaluation, without commercial deployment or distribution.
+
+Permitted Evaluation Use does not require prior authorization, registration, payment, or a separate commercial license.
+
+Permitted Evaluation Use is not subject to a fixed time limit, provided that the activities remain exclusively within its defined scope.
+
+“Commercial Use” means any use of the Licensed Materials outside Non-Commercial Use and Permitted Evaluation Use that involves commercial exploitation, ongoing operational business use, or the provision of products or services using the Software.
+
+Commercial Use includes, without limitation:
+
+(i) Ongoing operational or production deployment of the Software within a business or commercial organization.
+
+(ii) Integration of the Software into commercial products, platforms, applications, or services.
+
+(iii) Use of the Software to provide paid verification, auditing, certification, or other commercial services.
+
+(iv) Commercial redistribution, resale, sublicensing, or commercialization of the Software or modified versions.
+
+(v) Incorporation of the Software into commercial workflows beyond internal technical evaluation.
+
+(vi) Any other commercial exploitation of the Licensed Materials not expressly authorized under Non-Commercial Use or Permitted Evaluation Use.
+
+For avoidance of doubt, the commercial status of an individual or organization does not, by itself, convert Permitted Evaluation Use into Commercial Use.
+
+A separate written commercial license agreement is required only when the intended use falls within the definition of Commercial Use.
+
+“Modified Version” means any adaptation, modification, enhancement, or derivative work of the Software created by You, subject to the rights and restrictions established by this License.
+
+“Official Distribution” means the original Licensed Materials and any official updates published or expressly authorized by the Licensor through the official SPARTACO Primality Auditor & Verifier repository.
 
 --------------------------------------------------------------------------------
 2. GRANT FOR NON-COMMERCIAL USE
 --------------------------------------------------------------------------------
 
-Subject to the terms of this License, the Licensor grants You a worldwide,
-royalty-free, non-exclusive, non-transferable, non-sublicensable license, for
-Non-Commercial Use only, to:
+Subject to the terms of this License, the Licensor grants You a worldwide, royalty-free, non-exclusive, non-transferable, non-sublicensable license for Non-Commercial Use and Permitted Evaluation Use.
 
-  2.1  Software. Run, copy, study, and modify the Software, and redistribute
-       the Software, modified or unmodified, to others for their own
-       Non-Commercial Use, provided that Section 4 is met. You retain
-       ownership of Your own original contributions to a modified version;
-       no ownership of them is transferred to the Licensor. The portions
-       of a modified version that derive from the Licensed Materials remain
-       subject to this License.
+2.1 Software. You may download, install, run, copy, inspect, study, test, audit, and modify the Software for Non-Commercial Use or Permitted Evaluation Use. Redistribution for Non-Commercial Use remains permitted subject to Section 4. Any distribution of evaluation copies must preserve the applicable copyright and licensing notices.
 
-  2.2  Certificates. Use, copy, and redistribute the Certificates, unmodified,
-       for Non-Commercial Use, and use them as input to the Software to verify
-       them. The restrictions on the Certificate files do not claim exclusive
-       ownership of any prime number or of any mathematical fact the
-       Certificates contain.
+2.2 Certificates. You may access, inspect, verify, test, copy, and use the Certificates for Non-Commercial Use or Permitted Evaluation Use. Redistribution of unmodified Certificates for Non-Commercial Use remains permitted subject to Section 4. This License does not claim exclusive ownership of any prime number or mathematical fact contained in the Certificates.
 
-  2.3  Documentation. Read, copy, and redistribute the Documentation,
-       unmodified, for Non-Commercial Use. You may quote the Documentation
-       with attribution to the Licensor.
+2.3 Documentation. You may read, study, inspect, and use the Documentation for Non-Commercial Use or Permitted Evaluation Use. Non-commercial redistribution of unmodified Documentation remains permitted subject to Section 4. Quotations must carry appropriate attribution.
+
+2.4 Independent Auditing. Permitted Evaluation Use expressly includes independent examination of the Software’s mathematical verification procedures and reproducible testing of the Certificates. No prior commercial license or separate authorization is required for these activities.
 
 --------------------------------------------------------------------------------
 3. COMMERCIAL USE REQUIRES A SEPARATE LICENSE
 --------------------------------------------------------------------------------
 
-No right to Commercial Use is granted by this License. Commercial Use requires
-a separate written commercial license agreement executed by the Licensor.
-Absent such an agreement, all Commercial Use is prohibited.
+No right to Commercial Use, as defined in Section 1, is granted by this License.
+
+Commercial Use requires a separate written commercial license agreement executed by the Licensor.
+
+For avoidance of doubt, private companies, commercial organizations, and enterprise security teams may conduct Permitted Evaluation Use without obtaining a commercial license.
+
+A commercial license is required when the Licensed Materials are deployed for ongoing operational business use, integrated into commercial products or services, commercially redistributed, resold, or otherwise commercially exploited beyond the expressly permitted evaluation activities.
+
+The commercial licensing contact information and paid-services provisions in Sections 3.1 and 3.2 remain applicable.
 
 3.1  Contact. Commercial licenses are arranged directly with the Licensor:
 
@@ -153,9 +180,11 @@ Absent such an agreement, all Commercial Use is prohibited.
 6. TERMINATION
 --------------------------------------------------------------------------------
 
-6.1  Unauthorized Commercial Use. This License terminates immediately and
-     automatically, without notice, if You engage in Commercial Use without a
-     commercial license agreement.
+6.1 UNAUTHORIZED COMMERCIAL USE
+
+This License terminates immediately and automatically, without notice, if You engage in Commercial Use outside the permissions granted for Non-Commercial Use or Permitted Evaluation Use without the required commercial license agreement.
+
+Permitted Evaluation Use by a private company or commercial organization does not constitute a breach of this License. 
 
 6.2  Other breaches. For any other breach that can be remedied, this License
      terminates if You do not remedy the breach within thirty (30) days after
