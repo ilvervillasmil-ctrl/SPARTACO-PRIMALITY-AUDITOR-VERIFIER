@@ -83,6 +83,8 @@ This capability is **not restricted to OM337\-generated primes**\. A prime from 
 
 Enter an integer and, optionally, provide evidence such as a candidate factor, modular information, or a supported algebraic relation\. The auditor evaluates the supplied evidence and reports whether it establishes compositeness, reveals a contradiction, or remains insufficient\.
 
+<img width="1245" height="819" alt="image" src="https://github.com/user-attachments/assets/d7ee8649-9b1f-4577-b94d-068a3976acbd" />
+
 **Entering an arbitrary prime without a certificate does not automatically produce a deterministic primality proof\.** This distinction keeps the auditor’s conclusions mathematically meaningful\.
 
 ## What is included
@@ -135,6 +137,8 @@ Verification time depends on certificate size, hardware, and the arithmetic impl
 **SPARTACO SECURITY** is the broader security and mathematical software technology line\. **OMEGA337** is the originating computational architecture associated with the supplied prime results and their deterministic certificates\.
 
 This public repository presents a deliberately separate capability: **independent mathematical verification**\. Users can examine the certificate structure and reproduce the verifier’s checks without requiring access to the proprietary discovery and certificate\-production engine\.
+
+<img width="847" height="497" alt="image" src="https://github.com/user-attachments/assets/8ee75475-da08-4394-b682-2245c6243598" />
 
 The distinction matters:
 
