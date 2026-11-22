@@ -179,7 +179,7 @@ The following are not included in the free license and are provided only under a
 
 The auditor is distributed independently of the proprietary SPARTACO SECURITY, OM337, and UIS–OMEGA technologies, which are not licensed by this repository. Third-party components, such as `pywebview`, keep their own licenses.
 
-***DOCUMENTATION AND CONTEXT*** [CONTEXT](modules/docs/docs.md) 
+***DOCUMENTATION AND CONTEXT*** [CONTEXT](modules/docs/README.md) 
 
 The official versions and updates are those published in this repository.
 
