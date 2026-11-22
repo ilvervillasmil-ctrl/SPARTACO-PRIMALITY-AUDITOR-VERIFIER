@@ -18,10 +18,10 @@
 # AUTHOR / IP OWNER:   Ilver Villasmil
 # COPYRIGHT:           (c) 2026 Ilver Villasmil
 #
-# MODULE VERSION:      0.9.1
+# MODULE VERSION:      0.9.2
 # CONTRACT VERSION:    1.0
 # CONTRACT SCHEMA:     VPSI-CONTRACT-1.0
-# DEVELOPMENT STATUS:  DRAFT / UNDER DEVELOPMENT
+# DEVELOPMENT STATUS:  CONTINUOUS EVOLUTION
 # VISIBILITY:          PUBLIC CANDIDATE
 # ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 # ==============================================================================
