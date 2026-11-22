@@ -1,10 +1,36 @@
-# ===============================================================
-# SPARTACO / OM337 — INTERFAZ DE AUDITORÍA DETERMINISTA
-# Un único archivo de interfaz, siguiendo interfaz_3.py.
-# HTML + CSS + JavaScript integrados como cadena multilínea legible.
-# Requiere auditor_descarte.py junto a este archivo.
-# Copyright (c) 2026 Ilver Villasmil. All rights reserved.
-# ===============================================================
+# ==============================================================================
+# SPARTACO / OM337 — DETERMINISTIC AUDITOR INTERFACE
+# Desktop interface for the SPARTACO Primality Auditor & Verifier (v0.9.1)
+# ==============================================================================
+#
+# WHAT THIS IS
+#   The screen of the auditor. It is a projection, not an authority: it holds
+#   no mathematics of its own and never decides a verdict. Every result shown
+#   here is produced by auditor_descarte.py, which must sit alongside this file.
+#
+# WHAT IT DOES
+#   - Exposes the six evidence channels of the auditor as separate controls:
+#     FACTOR, MODULO, PINZA, TD (N = 2p + d), RESTO (remainder) and TANA.
+#   - Runs each channel on an integer N and displays the verdict, the
+#     justification and the evidence each channel contributed.
+#   - Loads a JSON certificate from the user's disk or from the certificates
+#     folder of this repository, verifies its TANA chain with exact integer
+#     arithmetic, and shows N and every node of the chain.
+#   - Runs entirely offline, in English and Spanish.
+#
+# WHAT IT DOES NOT DO
+#   It does not generate primes, does not access the proprietary OM337 or
+#   UIS-OMEGA engines, and does not accept an external declaration as proof.
+#
+# Verification contract: VPSI-CONTRACT-1.0
+# Requires: Python 3.11+, pywebview
+#
+# Copyright (c) 2026 Ilver Villasmil. All rights reserved except as expressly
+# licensed. Use and redistribution are governed by the SPARTACO Primality
+# Auditor Community License v1.0 (see the LICENSE file). Commercial use
+# requires a separate commercial license.
+# ==============================================================================
+
 from __future__ import annotations
 import json
 import sys
@@ -244,13 +270,66 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 @media(max-width:720px){.sidebar{height:auto}
 .ui3-marca{display:none}
 .audit-kpis{grid-template-columns:1fr 1fr}}
+
+/* ===============================================================
+ * EMBLEMA DEL AUDITOR - misma fortaleza de anillos de la portada,
+ * con el contenido del auditor: 4 veredictos, 6 vias, 3 nodos TANA, N.
+ * No opera. Solo presenta.
+ * =============================================================== */
+.emb{--e:300px;position:relative;flex:0 0 auto;width:var(--e);aspect-ratio:1}
+.emb-sm{--e:46px}
+.emb-lg{--e:min(300px,78vw);margin:4px auto 10px}
+.emb-ring,.emb-rotor{position:absolute;inset:0}
+.emb-rotor svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.emb-chips{position:absolute;inset:0;pointer-events:none}
+.ea .emb-rotor{animation:embGira 110s linear infinite}
+.eb .emb-rotor{animation:embGira 83s linear infinite reverse}
+.ec .emb-rotor{animation:embGira 67s linear infinite}
+.ed .emb-rotor{animation:embGira 49s linear infinite reverse}
+.ee .emb-rotor{animation:embGira 37s linear infinite}
+@keyframes embGira{to{transform:rotate(360deg)}}
+.emb-chip{
+  position:absolute;display:grid;place-items:center;
+  width:calc(var(--e)*.13);height:calc(var(--e)*.085);
+  border:1px solid rgba(34,211,238,.55);border-radius:999px;
+  background:linear-gradient(180deg,rgba(13,37,64,.92),rgba(8,23,37,.92));
+  box-shadow:0 0 12px rgba(34,211,238,.26),inset 0 1px 0 rgba(232,238,246,.15);
+  color:var(--cyan);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-weight:700;font-size:calc(var(--e)*.04);letter-spacing:.04em;
+  transform:translate(-50%,-50%);
+}
+.ea .emb-chip{animation:embContra 110s linear infinite}
+.ec .emb-chip{animation:embContra 67s linear infinite}
+.ed .emb-chip{animation:embContraR 49s linear infinite}
+@keyframes embContra{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(-360deg)}}
+@keyframes embContraR{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.emb .lang{grid-area:1/1;text-align:center;transition:opacity .8s ease,filter .8s ease}
+.emb[data-lang="es"] .lang.en{opacity:0;filter:blur(3px)}
+.emb[data-lang="en"] .lang.es{opacity:0;filter:blur(3px)}
+.emb-lb{filter:drop-shadow(0 1.2px 1.4px rgba(0,0,0,.8))}
+.emb-core{position:absolute;inset:0;display:grid;place-items:center}
+.emb-disc{
+  display:grid;place-items:center;text-align:center;width:16.5%;aspect-ratio:1;border-radius:22%;
+  border:1px solid rgba(34,211,238,.55);
+  background:radial-gradient(circle at 32% 26%,rgba(232,238,246,.16),transparent 44%),linear-gradient(160deg,#0d2540,#071018 78%);
+  box-shadow:0 0 0 2px rgba(34,211,238,.05),0 0 18px rgba(34,211,238,.35),0 0 40px rgba(37,99,235,.22),inset 0 1px 0 rgba(232,238,246,.15);
+  animation:embPulso 4.8s ease-in-out infinite;
+}
+@keyframes embPulso{0%,100%{box-shadow:0 0 0 2px rgba(34,211,238,.05),0 0 12px rgba(34,211,238,.3),0 0 30px rgba(37,99,235,.18),inset 0 1px 0 rgba(232,238,246,.15)}50%{box-shadow:0 0 0 4px rgba(34,211,238,.09),0 0 24px rgba(34,211,238,.5),0 0 54px rgba(37,99,235,.3),inset 0 1px 0 rgba(232,238,246,.15)}}
+.emb-ley{color:var(--cyan);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:calc(var(--e)*.075);line-height:1.15;text-shadow:0 0 12px rgba(34,211,238,.6)}
+.emb-ley small{display:block;margin-bottom:2px;color:var(--text2);font-size:.42em;font-weight:600;letter-spacing:.14em}
+.emb-ley span{display:block;color:#e8eef6;font-size:.7em}
+.emb-sm .emb-disc{width:34%}
+.emb-sm .emb-ley{font-size:calc(var(--e)*.2)}
+.emb-lg+.note{text-align:center;max-width:640px;margin:0 auto 14px}
+@media (prefers-reduced-motion:reduce){.emb-rotor,.emb-chip,.emb-disc{animation:none!important}.emb .lang{transition:none}}
 </style>
 </head>
 <body>
 <div class="layout">
 <aside class="sidebar">
 <div class="brand">
-<div class="logo">S</div>
+<div class="emb emb-sm" id="emb-brand" aria-hidden="true"></div>
 <div class="brand-name">SPARTACO</div>
 </div>
 <div class="languages">
@@ -361,6 +440,8 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 </section>
 <section id="view-about" class="hidden">
 <div class="panel">
+<div class="emb emb-lg" id="emb-about" role="img"></div>
+<p class="note" id="emb-legend"></p>
 <h2>SPARTACO / OM337</h2>
 <p id="about-text">Auditor público independiente. Verifica evidencia matemática sin revelar ni ejecutar el motor privado de descubrimiento.</p>
 <div class="ui3-grid">
@@ -383,13 +464,33 @@ let lang='es', certText=null, certData=null, busy=false, lastResult=null, lastCh
 const $=id=>document.getElementById(id);
 const channels=['FACTOR','MODULO','PINZA','TD','RESTO','TANA'];
 const dict={
- es:{subtitle:'Auditor matemático independiente · Sin conexión · Sin motor privado',auditTab:'AUDITORÍA',chainTab:'CADENA TANA',aboutTab:'ARQUITECTURA',num:'01 / Número entero',numHelp:'Introduce N y aporta evidencia. Cada botón ejecuta una vía real del auditor.',extra:'Evidencias opcionales',cert:'02 / Certificado JSON',certHelp:'Elige uno de los certificados del repositorio o abre un JSON local.',result:'03 / Dictamen matemático',chain:'Cadena de certificación TANA',chainHelp:'Los nodos se muestran como verificados únicamente después de una certificación exitosa.',audit:'AUDITAR N',verify:'VERIFICAR CERTIFICADO',clear:'LIMPIAR',none:'Ningún archivo seleccionado',wait:'EN ESPERA',example:'EJEMPLO LOCAL',repo:'CARGAR DEL REPOSITORIO',repoLabel:'CERTIFICADOS DEL REPOSITORIO',busy:'VERIFICANDO…',invalid:'ERROR',nochain:'Sin cadena verificada',bits:'bits',nodes:'nodos',ready:'CERTIFICADO',bad:'COMPUESTO',review:'REVISAR',channel:'Vía seleccionada',about:'Auditor público independiente. La interfaz solo invoca el motor matemático.',sideNote:'DETERMINISTA · 6 VÍAS',lblMod:'MÓDULOS (separados por coma)',lblRes:'RESTOS / DIVISORES (separados por coma)',certNote:'El ejemplo local es un certificado pequeño de prueba. El certificado gigante se puede cargar desde disco.',about1:'Divisibilidad exacta para demostrar composición.',about2:'Consulta auxiliar, identidad algebraica y certificación determinista de primalidad.',evid:'EVIDENCIA',labels:['FACTOR','MÓDULO','PINZA','TD','RESTO','TANA'],descs:['Comprueba un divisor no trivial exacto','Comprueba divisibilidad por módulos suministrados','Consulta auxiliar del motor; puede no estar disponible','Comprueba la identidad N = 2p + d','Comprueba divisibilidad por residuos suministrados','Verifica un certificado determinista JSON']},
- en:{subtitle:'Independent mathematical auditor · Offline · No private engine',auditTab:'AUDIT',chainTab:'TANA CHAIN',aboutTab:'ARCHITECTURE',num:'01 / Integer input',numHelp:'Enter N and evidence. Each button runs an actual auditor channel.',extra:'Optional evidence',cert:'02 / JSON certificate',certHelp:'Choose a repository certificate or open a local JSON file.',result:'03 / Mathematical verdict',chain:'TANA certification chain',chainHelp:'Nodes are marked verified only after successful certification.',audit:'AUDIT N',verify:'VERIFY CERTIFICATE',clear:'CLEAR',none:'No file selected',wait:'READY',example:'LOCAL EXAMPLE',repo:'LOAD FROM REPOSITORY',repoLabel:'REPOSITORY CERTIFICATES',busy:'VERIFYING…',invalid:'ERROR',nochain:'No verified chain',bits:'bits',nodes:'nodes',ready:'CERTIFIED',bad:'COMPOSITE',review:'REVIEW',channel:'Selected channel',about:'Independent public auditor. The interface only invokes the mathematical engine.',sideNote:'DETERMINISTIC · 6 CHANNELS',lblMod:'MODULI (comma-separated)',lblRes:'REMAINDERS / DIVISORS (comma-separated)',certNote:'The local example is a small test certificate. Large certificates can be loaded from disk.',about1:'Exact divisibility to prove compositeness.',about2:'Auxiliary consultation, algebraic identity and deterministic primality certification.',evid:'EVIDENCE',labels:['FACTOR','MODULO','PINZA','TD','REMAINDER','TANA'],descs:['Check an exact nontrivial divisor','Check divisibility by supplied moduli','Auxiliary engine consultation; may be unavailable','Check the identity N = 2p + d','Check divisibility by supplied remainders','Verify a deterministic JSON certificate']}
+ es:{subtitle:'Auditor matemático independiente · Sin conexión · Sin motor privado',auditTab:'AUDITORÍA',chainTab:'CADENA TANA',aboutTab:'ARQUITECTURA',num:'01 / Número entero',numHelp:'Introduce N y aporta evidencia. Cada botón ejecuta una vía real del auditor.',extra:'Evidencias opcionales',cert:'02 / Certificado JSON',certHelp:'Elige uno de los certificados del repositorio o abre un JSON local.',result:'03 / Dictamen matemático',chain:'Cadena de certificación TANA',chainHelp:'Los nodos se muestran como verificados únicamente después de una certificación exitosa.',audit:'AUDITAR N',verify:'VERIFICAR CERTIFICADO',clear:'LIMPIAR',none:'Ningún archivo seleccionado',wait:'EN ESPERA',example:'EJEMPLO LOCAL',repo:'CARGAR DEL REPOSITORIO',repoLabel:'CERTIFICADOS DEL REPOSITORIO',busy:'VERIFICANDO…',invalid:'ERROR',nochain:'Sin cadena verificada',bits:'bits',nodes:'nodos',ready:'CERTIFICADO',bad:'COMPUESTO',review:'REVISAR',channel:'Vía seleccionada',about:'Auditor público independiente. La interfaz solo invoca el motor matemático.',sideNote:'DETERMINISTA · 6 VÍAS',embLegend:'Anillo exterior: los 4 veredictos del auditor. Anillo medio: las 6 vías de evidencia. Anillo interior: los 3 tipos de nodo TANA. Centro: el entero N.',embLabel:'Emblema del auditor SPARTACO / OM337',lblMod:'MÓDULOS (separados por coma)',lblRes:'RESTOS / DIVISORES (separados por coma)',certNote:'El ejemplo local es un certificado pequeño de prueba. El certificado gigante se puede cargar desde disco.',about1:'Divisibilidad exacta para demostrar composición.',about2:'Consulta auxiliar, identidad algebraica y certificación determinista de primalidad.',evid:'EVIDENCIA',labels:['FACTOR','MÓDULO','PINZA','TD','RESTO','TANA'],descs:['Comprueba un divisor no trivial exacto','Comprueba divisibilidad por módulos suministrados','Consulta auxiliar del motor; puede no estar disponible','Comprueba la identidad N = 2p + d','Comprueba divisibilidad por residuos suministrados','Verifica un certificado determinista JSON']},
+ en:{subtitle:'Independent mathematical auditor · Offline · No private engine',auditTab:'AUDIT',chainTab:'TANA CHAIN',aboutTab:'ARCHITECTURE',num:'01 / Integer input',numHelp:'Enter N and evidence. Each button runs an actual auditor channel.',extra:'Optional evidence',cert:'02 / JSON certificate',certHelp:'Choose a repository certificate or open a local JSON file.',result:'03 / Mathematical verdict',chain:'TANA certification chain',chainHelp:'Nodes are marked verified only after successful certification.',audit:'AUDIT N',verify:'VERIFY CERTIFICATE',clear:'CLEAR',none:'No file selected',wait:'READY',example:'LOCAL EXAMPLE',repo:'LOAD FROM REPOSITORY',repoLabel:'REPOSITORY CERTIFICATES',busy:'VERIFYING…',invalid:'ERROR',nochain:'No verified chain',bits:'bits',nodes:'nodes',ready:'CERTIFIED',bad:'COMPOSITE',review:'REVIEW',channel:'Selected channel',about:'Independent public auditor. The interface only invokes the mathematical engine.',sideNote:'DETERMINISTIC · 6 CHANNELS',embLegend:'Outer ring: the auditor\'s 4 verdicts. Middle ring: the 6 evidence channels. Inner ring: the 3 TANA node types. Center: the integer N.',embLabel:'SPARTACO / OM337 auditor emblem',lblMod:'MODULI (comma-separated)',lblRes:'REMAINDERS / DIVISORS (comma-separated)',certNote:'The local example is a small test certificate. Large certificates can be loaded from disk.',about1:'Exact divisibility to prove compositeness.',about2:'Auxiliary consultation, algebraic identity and deterministic primality certification.',evid:'EVIDENCE',labels:['FACTOR','MODULO','PINZA','TD','REMAINDER','TANA'],descs:['Check an exact nontrivial divisor','Check divisibility by supplied moduli','Auxiliary engine consultation; may be unavailable','Check the identity N = 2p + d','Check divisibility by supplied remainders','Verify a deterministic JSON certificate']}
 };
+
+/* Emblema: anillos de lingotes. Cada pieza sale de un dato real del auditor. */
+function buildEmblem(uid,chips){
+ const P=(r,a)=>{const t=a*Math.PI/180;return (r*Math.sin(t)).toFixed(2)+' '+(-r*Math.cos(t)).toFixed(2);};
+ const arc=(r1,r2,a0,a1)=>'M'+P(r2,a0)+' A'+r2+' '+r2+' 0 0 1 '+P(r2,a1)+' L'+P(r1,a1)+' A'+r1+' '+r1+' 0 0 0 '+P(r1,a0)+' Z';
+ const ingots=(n,r1,r2,gap)=>{let s='';for(let i=0;i<n;i++){const c=i*360/n,m=180/n-gap/2;s+=`<path class="emb-lb" d="${arc(r1,r2,c-m,c+m)}" fill="url(#embAzul${uid})" stroke="rgba(34,211,238,.45)" stroke-width=".5"/><path d="${arc(r1+1.6,r2-1.6,c-m+.9,c+m-.9)}" fill="url(#embPlata${uid})" stroke="rgba(10,24,44,.55)" stroke-width=".35"/><path d="${arc(r2-2.2,r2-1.6,c-m+.9,c+m-.9)}" fill="rgba(255,255,255,.55)"/>`;}return s;};
+ const ring=(pairs,R)=>chips?'<div class="emb-chips">'+pairs.map((p,i)=>{const a=i*2*Math.PI/pairs.length;return `<div class="emb-chip" style="left:${(50+R*Math.sin(a)).toFixed(2)}%;top:${(50-R*Math.cos(a)).toFixed(2)}%"><span class="lang es">${p[0]}</span><span class="lang en">${p[1]}</span></div>`;}).join('')+'</div>':'';
+ const verdicts=[['CV','CV'],['PD','PD'],['EI','EI'],['CD','CD']];
+ const vias=[['FA','FA'],['MO','MO'],['PZ','PZ'],['TD','TD'],['RE','RM'],['TA','TA']];
+ const nodes=[['PZ','PZ'],['PK','PK'],['MP','MP']];
+ const defs=`<defs><linearGradient id="embMetA${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4fa"/><stop offset=".4" stop-color="#93a7bd"/><stop offset=".72" stop-color="#3b4f66"/><stop offset="1" stop-color="#22d3ee"/></linearGradient><linearGradient id="embMetB${uid}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#6f8399"/><stop offset="1" stop-color="#dbe6f0"/></linearGradient><linearGradient id="embAzul${uid}" gradientUnits="userSpaceOnUse" x1="-80" y1="-80" x2="80" y2="80"><stop offset="0" stop-color="#2a6cb8"/><stop offset=".45" stop-color="#123a6b"/><stop offset=".75" stop-color="#1d5aa0"/><stop offset="1" stop-color="#0a1f3a"/></linearGradient><linearGradient id="embPlata${uid}" gradientUnits="userSpaceOnUse" x1="-70" y1="-90" x2="70" y2="90"><stop offset="0" stop-color="#f4f8fc"/><stop offset=".3" stop-color="#b9c7d6"/><stop offset=".55" stop-color="#7d93ad"/><stop offset=".8" stop-color="#d3dfeb"/><stop offset="1" stop-color="#8aa2bd"/></linearGradient></defs>`;
+ const core=chips?'<div class="emb-ley"><small>AUDITOR</small>N<span>&#10003;</span></div>':'<div class="emb-ley">N</div>';
+ return `<div class="emb-ring ea"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${defs}<circle r="97" fill="none" stroke="#050d15" stroke-width="2.6" opacity=".9" transform="translate(0 2.2)"/><circle r="97" fill="none" stroke="url(#embMetA${uid})" stroke-width="1.8"/><circle r="93.8" fill="none" stroke="rgba(34,211,238,.3)" stroke-width=".6" stroke-dasharray="1 6"/></svg>${ring(verdicts,48.25)}</div></div>`
+ +`<div class="emb-ring eb"><div class="emb-rotor"><svg viewBox="-100 -100 200 200"><circle r="80" fill="none" stroke="#050d15" stroke-width="2.2" opacity=".9" transform="translate(0 1.8)"/><circle r="80" fill="none" stroke="url(#embMetB${uid})" stroke-width="1.3"/><circle r="76.4" fill="none" stroke="rgba(34,211,238,.35)" stroke-width=".7"/></svg></div></div>`
+ +`<div class="emb-ring ec"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${ingots(6,52,70,2.6)}</svg>${ring(vias,30.5)}</div></div>`
+ +`<div class="emb-ring ed"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${ingots(3,35,50,4.5)}</svg>${ring(nodes,21.25)}</div></div>`
+ +`<div class="emb-ring ee"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${ingots(6,21,32,6.5)}</svg></div></div>`
+ +`<div class="emb-core"><div class="emb-disc">${core}</div></div>`;
+}
+function initEmblems(){$('emb-brand').innerHTML=buildEmblem('b',false);$('emb-about').innerHTML=buildEmblem('a',true);}
 function safe(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showTab(v){for(const x of ['audit','chain','about']){$('view-'+x).classList.toggle('hidden',x!==v);$('tab-'+x).classList.toggle('active',x===v);}}
 function renderFlow(active=null,ok=false){$('flow').innerHTML=channels.map((c,i)=>`<div class="ui3-nodo ${active===c?'on':''} ${active===c&&!ok?'bad':''}"><span class="rid">0${i+1} / ${safe(dict[lang].evid)}</span><strong>${safe(dict[lang].labels[i])}</strong><span>${safe(dict[lang].descs[i])}</span></div>`).join('');}
-function setLang(v){lang=v;document.documentElement.lang=v;for(const l of ['es','en'])$('lang-'+l).classList.toggle('active',l===v);const t=dict[v];const ids={'subtitle':'subtitle','tab-audit':'auditTab','tab-chain':'chainTab','tab-about':'aboutTab','num-title':'num','num-help':'numHelp','extra-title':'extra','cert-title':'cert','cert-help':'certHelp','result-title':'result','chain-title':'chain','chain-help':'chainHelp','btn-audit':'audit','btn-cert':'verify','btn-clear':'clear','btn-example':'example','btn-repo':'repo','repo-label':'repoLabel','about-text':'about','side-note':'sideNote','lbl-modulos':'lblMod','lbl-residuos':'lblRes','cert-note':'certNote','about-1':'about1','about-2':'about2'};for(const [id,k] of Object.entries(ids))$(id).textContent=t[k];$('channel-buttons').innerHTML=channels.map((c,i)=>`<button class="btn secondary" id="via-${c}" onclick="runChannel('${c}')" title="${safe(t.descs[i])}">${safe(t.labels[i])}</button>`).join('');$('channel-help').textContent=t.descs[0];if(!busy)$('status-message').textContent=t.wait;if(!certText)$('file-info').textContent=t.none;renderFlow(lastChannel,!!lastResult&&lastResult.estado!=='ERROR');renderChain(lastChain);}
+function setLang(v){lang=v;document.documentElement.lang=v;document.querySelectorAll('.emb').forEach(e=>{e.dataset.lang=v;});$('emb-about').setAttribute('aria-label',dict[v].embLabel);for(const l of ['es','en'])$('lang-'+l).classList.toggle('active',l===v);const t=dict[v];const ids={'subtitle':'subtitle','tab-audit':'auditTab','tab-chain':'chainTab','tab-about':'aboutTab','num-title':'num','num-help':'numHelp','extra-title':'extra','cert-title':'cert','cert-help':'certHelp','result-title':'result','chain-title':'chain','chain-help':'chainHelp','btn-audit':'audit','btn-cert':'verify','btn-clear':'clear','btn-example':'example','btn-repo':'repo','repo-label':'repoLabel','about-text':'about','side-note':'sideNote','lbl-modulos':'lblMod','lbl-residuos':'lblRes','cert-note':'certNote','about-1':'about1','about-2':'about2','emb-legend':'embLegend'};for(const [id,k] of Object.entries(ids))$(id).textContent=t[k];$('channel-buttons').innerHTML=channels.map((c,i)=>`<button class="btn secondary" id="via-${c}" onclick="runChannel('${c}')" title="${safe(t.descs[i])}">${safe(t.labels[i])}</button>`).join('');$('channel-help').textContent=t.descs[0];if(!busy)$('status-message').textContent=t.wait;if(!certText)$('file-info').textContent=t.none;renderFlow(lastChannel,!!lastResult&&lastResult.estado!=='ERROR');renderChain(lastChain);}
 function setBusy(v){busy=v;for(const id of ['btn-audit','btn-cert','btn-repo','btn-example'])$(id).disabled=v||(id==='btn-cert'&&!certText);for(const c of channels){const el=$('via-'+c);if(el)el.disabled=v;}$('status-message').textContent=v?dict[lang].busy:dict[lang].wait;}
 function evidenceHtml(list){if(!Array.isArray(list)||!list.length)return '';return '<div class="node-list">'+list.map(e=>`<div class="cap-row"><b class="mono">${safe(String(e.via||'').toUpperCase())}</b> · ${safe(e.afirmacion||'')}${e.concluyente?' ✓':''}<span class="note" style="display:block;overflow-wrap:anywhere">${safe([e.descarte,e.datos].filter(Boolean).join(' · '))}</span></div>`).join('')+'</div>';}
 function display(res){lastResult=res;const good=res.estado==='PRIMO_POR_DESCARTE',bad=res.estado==='COMPUESTO_VERIFICADO';const color=good?'ready':bad?'bad':'warn';const details=[res.justificacion||res.error||'',res.bits?`${res.bits} ${dict[lang].bits}`:'',res.nodos?`${res.nodos} ${dict[lang].nodes}`:''].filter(Boolean);$('result-box').innerHTML=`<div class="result-value ${color}">${safe(res.estado||'ERROR')}</div><p style="overflow-wrap:anywhere">${safe(details.join(' · '))}</p>${evidenceHtml(res.evidencias)}`;$('status-message').textContent=good?dict[lang].ready:bad?dict[lang].bad:dict[lang].review;renderFlow(lastChannel,good||bad);}
@@ -407,7 +508,7 @@ async function loadRepoCert(){const name=$('repo-certs').value;if(!name)return;t
 function loadExample(){acceptCert(JSON.stringify({N:'71',bits_N:7,arbol:[{tipo:'pinza',n:'5'},{tipo:'pinza',n:'7'},{tipo:'multi_pock',n:'71',ancestros:[{q:'5',a:'2'},{q:'7',a:'2'}]}]}),'example_71.json');}
 function clearAll(){for(const id of ['n','factor','modulos','p','d','residuos','cert-file'])$(id).value='';certText=null;certData=null;lastChannel=null;lastResult=null;$('btn-cert').disabled=true;$('file-info').textContent=dict[lang].none;$('result-box').textContent='';renderChain({});renderFlow();$('status-message').textContent=dict[lang].wait;showTab('audit');}
 async function initRepo(){try{const r=await bridge('listar_certificados');const select=$('repo-certs');for(const name of r.certificados){const opt=document.createElement('option');opt.value=name;opt.textContent=name;select.appendChild(opt);}}catch(e){$('file-info').textContent=String(e);}}
-setLang('es');renderChain({});window.addEventListener('pywebviewready',initRepo);if(window.pywebview?.api)initRepo();
+initEmblems();setLang('es');renderChain({});window.addEventListener('pywebviewready',initRepo);if(window.pywebview?.api)initRepo();
 </script>
 </body>
 </html>
