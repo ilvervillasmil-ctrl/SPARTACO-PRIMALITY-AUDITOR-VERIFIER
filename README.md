@@ -169,9 +169,9 @@ A certified prime is a mathematical result\. It is **not automatically a secure 
 
 ## Licensing
 
-SPARTACO Primality Auditor & Verifier is available free of charge for personal, educational, and non-commercial research use under the SPARTACO Primality Auditor Community License v1.0. The full terms are in the [`LICENSE`](LICENSE) file.
+SPARTACO Primality Auditor & Verifier is available free of charge for personal, educational, and non-commercial research use under the SPARTACO Primality Auditor Community License v1.0. The full terms are in the [LICENSE](LICENSE.md) file.
 
-This license covers the Python source code, the desktop interface, the launcher, the 40 JSON certificate files, and the documentation (including `TANA.md`). Each material has specific permissions, described in the `LICENSE` file.
+This license covers the Python source code, the desktop interface, the launcher, the 40 JSON certificate files, and the documentation [TANA](TANA.md). Each material has specific permissions, described in the [LICENSE](LICENSE.md) file.
 
 Commercial use, enterprise deployment, product integration, commercial redistribution, and commercial exploitation of modified versions require a separate commercial license. **This includes internal use by a company, even when the auditor is neither sold nor redistributed.**
 
