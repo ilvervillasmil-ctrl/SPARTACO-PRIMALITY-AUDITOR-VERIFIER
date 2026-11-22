@@ -106,7 +106,7 @@ python -m pip install pywebview
 If your checkout includes the application bootstrap, start the desktop application from the repository root:
 
 ```bash
-python run.py
+python rum.py
 ```
 
 The supplied repository snapshot may not contain `run.py`; in that case, use the auditor directly or add the bootstrap before launching the GUI\.
