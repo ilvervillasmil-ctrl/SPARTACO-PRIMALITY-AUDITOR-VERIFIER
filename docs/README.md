@@ -12,5 +12,5 @@ Documentation is provided for reference\. The availability of a document does no
 
 © 2026 Ilver Villasmil\. SPARTACO SECURITY\.
 
-<img width="1172" height="237" alt="image" src="https://github.com/user-attachments/assets/aa3f2a0b-6b2f-4e71-a198-0c6e0369955a" />
+<img width="1204" height="268" alt="image" src="https://github.com/user-attachments/assets/a15724ca-daab-4781-bc4c-286941b65faa" />
 
