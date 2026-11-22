@@ -74,7 +74,7 @@ The repository also includes **40 JSON certificate files** produced within the S
 
 Load a compatible JSON certificate and let the verifier check its mathematical chain\. The verifier independently recalculates the implemented conditions; it does not accept a prime label, an engine status, or an external assertion as proof\.
 
-The supported TANA certificate nodes include **exact trial division &#40;pinza&#41;, Pocklington, and multi\-Pocklington &#40;T–MA1&#41;**\. A valid chain leads to a deterministic primality verdict\. A malformed, unsupported, or mathematically insufficient chain is not accepted as proof\.
+The supported TANA certificate nodes include **exact trial division &#40;pinza&#41;, Pocklington, and multi\-Pocklington &#40;T–MA1&#41;**\ [TANA](modules/auditor/docs/TANA.md). A valid chain leads to a deterministic primality verdict\. A malformed, unsupported, or mathematically insufficient chain is not accepted as proof\.
 
 This capability is **not restricted to OM337\-generated primes**\. A prime from another source can be verified when accompanied by a certificate satisfying the verifier’s supported proof format and premises\.
 
