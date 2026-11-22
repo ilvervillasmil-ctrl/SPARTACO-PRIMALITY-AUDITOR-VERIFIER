@@ -57,11 +57,17 @@ Non-Commercial Use only, to:
 
   2.1  Software. Run, copy, study, and modify the Software, and redistribute
        the Software, modified or unmodified, to others for their own
-       Non-Commercial Use, provided that Section 4 is met.
+       Non-Commercial Use, provided that Section 4 is met. You retain
+       ownership of Your own original contributions to a modified version;
+       no ownership of them is transferred to the Licensor. The portions
+       of a modified version that derive from the Licensed Materials remain
+       subject to this License.
 
   2.2  Certificates. Use, copy, and redistribute the Certificates, unmodified,
        for Non-Commercial Use, and use them as input to the Software to verify
-       them.
+       them. The restrictions on the Certificate files do not claim exclusive
+       ownership of any prime number or of any mathematical fact the
+       Certificates contain.
 
   2.3  Documentation. Read, copy, and redistribute the Documentation,
        unmodified, for Non-Commercial Use. You may quote the Documentation
@@ -72,12 +78,27 @@ Non-Commercial Use only, to:
 --------------------------------------------------------------------------------
 
 No right to Commercial Use is granted by this License. Commercial Use requires
-a separate written commercial license signed or otherwise expressly granted by
-the Licensor. Absent such a license, all Commercial Use is prohibited.
+a separate written commercial license agreement executed by the Licensor.
+Absent such an agreement, all Commercial Use is prohibited.
 
-Commercial licensing is arranged through the rights holder, via the official
-SPARTACO SECURITY licensing channel published by the Licensor. Requests should
-state the intended use, the organization, and the expected scope of deployment.
+3.1  Contact. Commercial licenses are arranged directly with the Licensor:
+
+       Ilver Villasmil
+       Email: Ilvervillasmil@gmail.com
+       Phone: +1 (512) 923-7344
+
+     Requests should state the intended use, the organization, and the
+     expected scope of deployment.
+
+3.2  Paid services. The following are NOT included in this License and are
+     provided by the Licensor only under a separate written agreement and for
+     a fee:
+       (a) additions or changes to the Licensed Materials requested by You;
+       (b) maintenance of the Licensed Materials for You;
+       (c) customization of the Licensed Materials for You;
+       (d) any other support or development work.
+     Nothing in this License obliges the Licensor to provide any of these
+     services.
 
 --------------------------------------------------------------------------------
 4. CONDITIONS
@@ -97,6 +118,12 @@ state the intended use, the organization, and the expected scope of deployment.
 
 4.4  No removal. You may not remove or alter licensing notices or
      identification of the Licensor.
+
+4.5  Official versions and updates. The only official versions and updates of
+     the Licensed Materials are those published in the Licensor's official
+     SPARTACO Primality Auditor & Verifier repository. Copies, forks, and
+     modified versions obtained or published elsewhere are not official, and
+     the Licensor makes no statement about them.
 
 --------------------------------------------------------------------------------
 5. RESERVED RIGHTS AND EXCLUSIONS
@@ -126,10 +153,18 @@ state the intended use, the organization, and the expected scope of deployment.
 6. TERMINATION
 --------------------------------------------------------------------------------
 
-This License terminates automatically, without notice, if You breach any of
-its terms, including by engaging in Commercial Use without a commercial
-license. Upon termination You must stop using and distributing the Licensed
-Materials and destroy Your copies. Sections 5, 7, 8 and 9 survive termination.
+6.1  Unauthorized Commercial Use. This License terminates immediately and
+     automatically, without notice, if You engage in Commercial Use without a
+     commercial license agreement.
+
+6.2  Other breaches. For any other breach that can be remedied, this License
+     terminates if You do not remedy the breach within thirty (30) days after
+     notice from the Licensor. A breach that cannot be remedied terminates
+     this License immediately.
+
+6.3  Effect. Upon termination You must stop using and distributing the
+     Licensed Materials and destroy Your copies. Sections 5, 7, 8 and 9
+     survive termination.
 
 --------------------------------------------------------------------------------
 7. DISCLAIMER OF WARRANTY
@@ -158,8 +193,12 @@ WITH THE LICENSED MATERIALS OR THEIR USE OR OTHER DEALINGS IN THEM.
 9.2  This License is the entire agreement for the Licensed Materials, except
      for any separate commercial license signed by the Licensor.
 
-9.3  Governing law and jurisdiction: [TO BE DEFINED BY THE LICENSOR, WITH LEGAL
-     COUNSEL].
+9.3  Governing law and jurisdiction: This License is governed by the
+     applicable federal law of the United States of America and by the laws
+     of the State in which the Licensor is domiciled when the dispute arises,
+     without regard to conflict-of-laws principles. The state and federal
+     courts located in that State have exclusive jurisdiction over any
+     dispute arising from this License.
 
 --------------------------------------------------------------------------------
 Copyright (c) 2026 Ilver Villasmil. All rights reserved except as expressly
