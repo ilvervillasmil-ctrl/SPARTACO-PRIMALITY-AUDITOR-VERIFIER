@@ -11,3 +11,6 @@ The documents collected here provide architectural context, technical explanatio
 Documentation is provided for reference\. The availability of a document does not grant rights to proprietary implementations, trademarks, or other intellectual property\. Refer to the repository’s Refer to the repository’s [LICENSE](../LICENSE.md)  for the terms applicable to distributed materials\.
 
 © 2026 Ilver Villasmil\. SPARTACO SECURITY\.
+
+<img width="1172" height="237" alt="image" src="https://github.com/user-attachments/assets/aa3f2a0b-6b2f-4e71-a198-0c6e0369955a" />
+
