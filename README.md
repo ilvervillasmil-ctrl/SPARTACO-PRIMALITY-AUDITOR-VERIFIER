@@ -196,6 +196,8 @@ For commercial licensing and enterprise agreements, contact the rights holder th
 Email: Ilvervillasmil@gmail.com
 Phone: +1 (512) 923-7344
 
+<img width="1172" height="237" alt="image" src="https://github.com/user-attachments/assets/ebc1755f-1179-43ff-9a5b-7b4864f390f8" />
+
 
 ---
 
