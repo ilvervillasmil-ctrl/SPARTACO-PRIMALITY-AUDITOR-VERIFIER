@@ -119,20 +119,35 @@
 #     VPSI-CONTRACT-1.0
 #
 # ==============================================================================
-#  VII. INTELLECTUAL PROPERTY / PROPIEDAD INTELECTUAL
+#  VII. INTELLECTUAL PROPERTY AND LICENSE / PROPIEDAD INTELECTUAL Y LICENCIA
 # ==============================================================================
 #
 # Copyright (c) 2026 Ilver Villasmil.
-# All rights reserved unless expressly licensed otherwise.
+# All rights reserved except as expressly licensed.
 #
-# This component is being evaluated for possible public distribution.
-# No open-source license is granted by this draft header.
+# This component is licensed under the SPARTACO Primality Auditor Community
+# License v1.0 (see the LICENSE file in this repository).
+#
+#     FREE:        Personal, educational, and non-commercial research use.
+#     COMMERCIAL:  Commercial use, including internal use by a company,
+#                  requires a separate written commercial license.
+#     SERVICES:    Additions, maintenance, and customization are provided
+#                  only under a separate written agreement and for a fee.
+#
+# Este componente se licencia bajo la SPARTACO Primality Auditor Community
+# License v1.0 (ver el archivo LICENSE de este repositorio). El uso es libre
+# para fines personales, educativos y de investigación no comercial. El uso
+# comercial, incluido el uso interno de una empresa, requiere una licencia
+# comercial aparte.
 #
 # The private mathematical engines, optimization methods, security
-# orchestration components, and other proprietary implementations
-# remain outside the scope of any future public verifier license
-# unless expressly identified in the applicable licensing documents.
+# orchestration components, and other proprietary implementations of
+# SPARTACO SECURITY, OM337, and UIS-OMEGA are NOT licensed by this license
+# and remain outside its scope.
 #
+# Third-party components keep their own licenses.
+#
+# Commercial licensing: Ilver Villasmil · Ilvervillasmil@gmail.com
 # ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 # ==============================================================================
 # END OF MODULE HEADER
