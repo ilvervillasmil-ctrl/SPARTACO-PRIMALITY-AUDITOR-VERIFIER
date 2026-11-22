@@ -166,7 +166,7 @@ A certified prime is a mathematical result\. It is **not automatically a secure 
 
 ## Project information
 
-**Auditor:** v0\.9\.1
+**Auditor:** v0\.9\.2
 **Verification contract:** VPSI\-CONTRACT\-1\.0
 **Execution model:** Local / offline
 **Author and intellectual\-property owner:** Ilver Villasmil
