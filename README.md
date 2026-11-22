@@ -21,7 +21,8 @@
 
 Its components serve distinct purposes within a common technological framework.
 
-<img width="1672" height="941" alt="image" src="https://github.com/user-attachments/assets/b378573d-28ee-4f09-a29f-e8a86cee90c9" />
+<img width="1168" height="784" alt="image" src="https://github.com/user-attachments/assets/1ce44e89-07bd-49bf-be7e-52ee9293e5a9" />
+
 
 
 ```text
