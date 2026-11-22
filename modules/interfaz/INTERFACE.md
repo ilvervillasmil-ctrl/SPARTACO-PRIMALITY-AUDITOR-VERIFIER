@@ -1,7 +1,7 @@
 # SPARTACO / OM337 — Auditor Interface
 
 **Desktop interface for the SPARTACO Primality Auditor & Verifier**
-Auditor v0.9.1 · Verification contract VPSI-CONTRACT-1.0 · Offline · English / Español
+Auditor v0.9.2 · Verification contract VPSI-CONTRACT-1.0 · Offline · English / Español
 
 ---
 
@@ -134,7 +134,7 @@ python rum.py
 
 ## 11. Licensing
 
-Free for personal, educational and non-commercial research use under the **SPARTACO Primality Auditor Community License v1.0** (see [`LICENSE`](LICENSE)).
+Free for personal, educational and non-commercial research use under the **SPARTACO Primality Auditor Community License v1.0** (see [LICENSE](../LICENSE.md).
 
 Commercial use, including internal use by a company, requires a separate commercial license. Additions, maintenance and customization are provided only under a separate written agreement.
 
@@ -143,5 +143,6 @@ The auditor is distributed independently of the proprietary SPARTACO SECURITY, O
 **Contact:** Ilver Villasmil · Ilvervillasmil@gmail.com · +1 (512) 923-7344
 
 ---
+<img width="1204" height="268" alt="image" src="https://github.com/user-attachments/assets/b592cf43-8f04-4a1f-ae39-66a4bacec3c0" />
 
 Copyright © 2026 Ilver Villasmil. All rights reserved except as expressly licensed.
