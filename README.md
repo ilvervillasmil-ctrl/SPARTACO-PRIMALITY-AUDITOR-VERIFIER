@@ -21,6 +21,9 @@
 
 Its components serve distinct purposes within a common technological framework.
 
+<img width="1672" height="941" alt="image" src="https://github.com/user-attachments/assets/b378573d-28ee-4f09-a29f-e8a86cee90c9" />
+
+
 ```text
                   SPARTACO SECURITY
              Unified Security Architecture
