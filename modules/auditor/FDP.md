@@ -441,6 +441,9 @@ The FDP filter satisfies the following two complementary properties:
 
 **(ii) Additive displacement.** If $a_1 \equiv a_2 \pmod d$, then $(B + a_1) \equiv (B + a_2) \pmod d$ (Corollary 6.1). Conversely, if $a_1 \not\equiv a_2 \pmod d$, the residue class of the candidate modulo $d$ may differ, and the position within $D$ at which FDP first detects a divisor may change accordingly.
 
+<img width="1320" height="957" alt="image" src="https://github.com/user-attachments/assets/8ecb634a-4835-46d3-941d-40e30f41e3ab" />
+
+
 **Proof.** Part (i) is Proposition 4. Part (ii) is Corollary 6.1. $\blacksquare$
 
 ### 10.8 Formal consequence
