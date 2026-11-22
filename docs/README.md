@@ -8,6 +8,6 @@ The documents collected here provide architectural context, technical explanatio
 
 **Architecture documentation is not the auditor itself\.** The public auditor independently checks compatible mathematical evidence and primality certificates; access to the proprietary engines is not required for verification\.
 
-Documentation is provided for reference\. The availability of a document does not grant rights to proprietary implementations, trademarks, or other intellectual property\. Refer to the repository’s `LICENSE` for the terms applicable to distributed materials\.
+Documentation is provided for reference\. The availability of a document does not grant rights to proprietary implementations, trademarks, or other intellectual property\. Refer to the repository’s Refer to the repository’s [LICENSE](../LICENSE.md)  for the terms applicable to distributed materials\.
 
 © 2026 Ilver Villasmil\. SPARTACO SECURITY\.
