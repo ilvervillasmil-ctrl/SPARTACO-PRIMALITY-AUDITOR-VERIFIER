@@ -5,7 +5,7 @@
 # COMPONENT   : APPLICATION BOOTSTRAP & LAUNCHER
 # SYSTEM      : SPARTACO PRIMALITY AUDITOR & VERIFIER
 # ARCHITECTURE: UIS–TANA–OMEGA
-# VERSION     : 1.0.0
+# VERSION rum   : 1.0.0
 # EXECUTION   : LOCAL / OFFLINE / DETERMINISTIC
 # =============================================================================
 #
