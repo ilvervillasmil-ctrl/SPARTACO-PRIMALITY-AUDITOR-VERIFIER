@@ -8,6 +8,7 @@
 from __future__ import annotations
 import json
 import sys
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from auditor_descarte import auditar, verificar_certificado_tana, CertificadoInvalido
 
@@ -265,7 +266,7 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 <div class="muelle-card">
 <div class="muelle-k">SPARTACO / OM337</div>
 <div class="muelle-v" id="side-state">OFFLINE</div>
-<div class="muelle-n">DETERMINISTA · 6 VÍAS</div>
+<div class="muelle-n" id="side-note">DETERMINISTA · 6 VÍAS</div>
 </div>
 <div class="statusbar">INDEPENDENT MATHEMATICAL VERIFIER</div>
 </div>
@@ -302,15 +303,17 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 <input id="p" type="text" placeholder="">
 </div>
 <div>
-<label>MÓDULOS (separados por coma)</label>
+<label id="lbl-modulos">MÓDULOS (separados por coma)</label>
 <input id="modulos" type="text" placeholder="3, 5">
 <label>D (N = 2p + d)</label>
 <input id="d" type="text" placeholder="">
 </div>
 </div>
-<label>RESTOS / DIVISORES (separados por coma)</label>
+<label id="lbl-residuos">RESTOS / DIVISORES (separados por coma)</label>
 <input id="residuos" type="text" placeholder="">
 </details>
+<div class="actions" id="channel-buttons" style="flex-wrap:wrap"></div>
+<p class="note" id="channel-help"></p>
 <div class="actions">
 <button class="btn primary" id="btn-audit" onclick="runAudit()">AUDITAR N</button>
 <button class="btn secondary" onclick="clearAll()" id="btn-clear">LIMPIAR</button>
@@ -322,6 +325,11 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 <label for="cert-file">CERTIFICADO · .JSON</label>
 <input id="cert-file" type="file" accept=".json,application/json" onchange="loadCert(event)">
 <div class="file-caption" id="file-info">Ningún archivo seleccionado</div>
+<label id="repo-label" for="repo-certs">CERTIFICADOS DEL REPOSITORIO</label>
+<select id="repo-certs" style="width:100%;padding:12px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px"><option value="">—</option></select>
+<div class="actions">
+<button class="btn secondary" id="btn-repo" onclick="loadRepoCert()">CARGAR DEL REPOSITORIO</button>
+</div>
 <div class="actions">
 <button class="btn primary" id="btn-cert" onclick="runCert()" disabled>VERIFICAR CERTIFICADO</button>
 <button class="btn secondary" id="btn-example" onclick="loadExample()">EJEMPLO LOCAL</button>
@@ -343,6 +351,7 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 <div class="panel">
 <h2 id="chain-title">Cadena de certificación TANA</h2>
 <p class="note" id="chain-help">Los nodos se muestran como verificados únicamente después de una certificación exitosa.</p>
+<div id="cert-n" class="file-caption" style="overflow-wrap:anywhere"></div>
 <div class="audit-kpis" id="chain-kpis">
 </div>
 <div class="node-list" id="chain-nodes">
@@ -357,11 +366,11 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 <div class="ui3-grid">
 <div class="ui3-card">
 <h3>FACTOR · MÓDULO · RESTO</h3>
-<p class="note">Divisibilidad exacta para demostrar composición.</p>
+<p class="note" id="about-1">Divisibilidad exacta para demostrar composición.</p>
 </div>
 <div class="ui3-card">
 <h3>PINZA · TD · TANA</h3>
-<p class="note">Consulta auxiliar, identidad algebraica y certificación determinista de primalidad.</p>
+<p class="note" id="about-2">Consulta auxiliar, identidad algebraica y certificación determinista de primalidad.</p>
 </div>
 </div>
 <p class="note">AUDITOR_DESCARTE v0.9.1 · VPSI-CONTRACT-1.0 · © 2026 Ilver Villasmil · Uso y redistribución sujetos a licencia.</p>
@@ -370,108 +379,119 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 </main>
 </div>
 <script>
-let lang='es',certText=null,verified=null,busy=false;
+let lang='es', certText=null, certData=null, busy=false, lastResult=null, lastChannel=null;
 const $=id=>document.getElementById(id);
-const strings={es:{subtitle:'Auditor matemático independiente · Sin conexión · Sin motor privado',num:'01 / Número entero',numHelp:'Introduce N. Opcionalmente aporta un divisor o evidencias adicionales. Sin certificado no se declara primo.',extra:'Evidencias opcionales',cert:'02 / Certificado JSON',certHelp:'Selecciona un archivo local. La validación TANA se ejecuta una sola vez al pulsar verificar.',result:'03 / Dictamen matemático',chain:'Cadena de certificación TANA',chainHelp:'Los nodos se muestran como verificados únicamente después de una certificación exitosa.',audit:'AUDITAR N',verify:'VERIFICAR CERTIFICADO',clear:'LIMPIAR',none:'Ningún archivo seleccionado',wait:'EN ESPERA',example:'EJEMPLO LOCAL'},en:{subtitle:'Independent mathematical auditor · Offline · No private engine',num:'01 / Integer input',numHelp:'Enter N and optional mathematical evidence. Without a certificate, primality is not asserted.',extra:'Optional evidence',cert:'02 / JSON certificate',certHelp:'Select a local file. TANA verification runs exactly once when you press verify.',result:'03 / Mathematical verdict',chain:'TANA certification chain',chainHelp:'Nodes are marked verified only after successful certification.',audit:'AUDIT N',verify:'VERIFY CERTIFICATE',clear:'CLEAR',none:'No file selected',wait:'READY',example:'LOCAL EXAMPLE'}};
-function setLang(v){lang=v;for(const l of ['es','en'])$('lang-'+l).classList.toggle('active',l===v);const t=strings[v];for(const [id,key] of Object.entries({'subtitle':'subtitle','num-title':'num','num-help':'numHelp','extra-title':'extra','cert-title':'cert','cert-help':'certHelp','result-title':'result','chain-title':'chain','chain-help':'chainHelp','btn-audit':'audit','btn-cert':'verify','btn-clear':'clear','btn-example':'example'}))$(id).textContent=t[key];}
+const channels=['FACTOR','MODULO','PINZA','TD','RESTO','TANA'];
+const dict={
+ es:{subtitle:'Auditor matemático independiente · Sin conexión · Sin motor privado',auditTab:'AUDITORÍA',chainTab:'CADENA TANA',aboutTab:'ARQUITECTURA',num:'01 / Número entero',numHelp:'Introduce N y aporta evidencia. Cada botón ejecuta una vía real del auditor.',extra:'Evidencias opcionales',cert:'02 / Certificado JSON',certHelp:'Elige uno de los certificados del repositorio o abre un JSON local.',result:'03 / Dictamen matemático',chain:'Cadena de certificación TANA',chainHelp:'Los nodos se muestran como verificados únicamente después de una certificación exitosa.',audit:'AUDITAR N',verify:'VERIFICAR CERTIFICADO',clear:'LIMPIAR',none:'Ningún archivo seleccionado',wait:'EN ESPERA',example:'EJEMPLO LOCAL',repo:'CARGAR DEL REPOSITORIO',repoLabel:'CERTIFICADOS DEL REPOSITORIO',busy:'VERIFICANDO…',invalid:'ERROR',nochain:'Sin cadena verificada',bits:'bits',nodes:'nodos',ready:'CERTIFICADO',bad:'COMPUESTO',review:'REVISAR',channel:'Vía seleccionada',about:'Auditor público independiente. La interfaz solo invoca el motor matemático.',sideNote:'DETERMINISTA · 6 VÍAS',lblMod:'MÓDULOS (separados por coma)',lblRes:'RESTOS / DIVISORES (separados por coma)',certNote:'El ejemplo local es un certificado pequeño de prueba. El certificado gigante se puede cargar desde disco.',about1:'Divisibilidad exacta para demostrar composición.',about2:'Consulta auxiliar, identidad algebraica y certificación determinista de primalidad.',evid:'EVIDENCIA',labels:['FACTOR','MÓDULO','PINZA','TD','RESTO','TANA'],descs:['Comprueba un divisor no trivial exacto','Comprueba divisibilidad por módulos suministrados','Consulta auxiliar del motor; puede no estar disponible','Comprueba la identidad N = 2p + d','Comprueba divisibilidad por residuos suministrados','Verifica un certificado determinista JSON']},
+ en:{subtitle:'Independent mathematical auditor · Offline · No private engine',auditTab:'AUDIT',chainTab:'TANA CHAIN',aboutTab:'ARCHITECTURE',num:'01 / Integer input',numHelp:'Enter N and evidence. Each button runs an actual auditor channel.',extra:'Optional evidence',cert:'02 / JSON certificate',certHelp:'Choose a repository certificate or open a local JSON file.',result:'03 / Mathematical verdict',chain:'TANA certification chain',chainHelp:'Nodes are marked verified only after successful certification.',audit:'AUDIT N',verify:'VERIFY CERTIFICATE',clear:'CLEAR',none:'No file selected',wait:'READY',example:'LOCAL EXAMPLE',repo:'LOAD FROM REPOSITORY',repoLabel:'REPOSITORY CERTIFICATES',busy:'VERIFYING…',invalid:'ERROR',nochain:'No verified chain',bits:'bits',nodes:'nodes',ready:'CERTIFIED',bad:'COMPOSITE',review:'REVIEW',channel:'Selected channel',about:'Independent public auditor. The interface only invokes the mathematical engine.',sideNote:'DETERMINISTIC · 6 CHANNELS',lblMod:'MODULI (comma-separated)',lblRes:'REMAINDERS / DIVISORS (comma-separated)',certNote:'The local example is a small test certificate. Large certificates can be loaded from disk.',about1:'Exact divisibility to prove compositeness.',about2:'Auxiliary consultation, algebraic identity and deterministic primality certification.',evid:'EVIDENCE',labels:['FACTOR','MODULO','PINZA','TD','REMAINDER','TANA'],descs:['Check an exact nontrivial divisor','Check divisibility by supplied moduli','Auxiliary engine consultation; may be unavailable','Check the identity N = 2p + d','Check divisibility by supplied remainders','Verify a deterministic JSON certificate']}
+};
+function safe(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showTab(v){for(const x of ['audit','chain','about']){$('view-'+x).classList.toggle('hidden',x!==v);$('tab-'+x).classList.toggle('active',x===v);}}
-function renderFlow(){const names=['FACTOR','MÓDULO','PINZA','TD','RESTO','TANA'];$('flow').innerHTML=names.map((x,i)=>'<div class="ui3-nodo on">
-<span class="rid">0'+(i+1)+' / EVIDENCE</span>
-<strong>'+x+'</strong>
-</div>'+(i<5?'<div class="ui3-linea on">
-</div>':'' )).join('');}
-function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function setBusy(b){busy=b;$('btn-audit').disabled=b;$('btn-cert').disabled=b||!certText;$('status-message').textContent=b?'CALCULANDO…':strings[lang].wait;}
-function display(res){const good=res.estado==='PRIMO_POR_DESCARTE',bad=res.estado==='COMPUESTO_VERIFICADO',color=good?'ready':bad?'bad':'warn';$('result-box').innerHTML='<div class="result-value '+color+'">'+safe(res.estado||'ERROR')+'</div>
-<p>'+safe(res.justificacion||res.error||'')+'</p>'+(res.bits?'<span class="pill">'+res.bits+' bits</span>':'')+(res.nodos?'<span class="pill">'+res.nodos+' nodos</span>':'');$('status-message').textContent=good?'CERTIFICADO':bad?'COMPUESTO':'REVISAR';}
-function renderChain(res){verified=res.estado==='PRIMO_POR_DESCARTE'?res:null;const details=verified?.detalles||[];$('chain-kpis').innerHTML=verified?'<div class="ui3-card">
-<div class="ui3-k">BITS</div>
-<div class="ui3-v">'+verified.bits+'</div>
-</div>
-<div class="ui3-card">
-<div class="ui3-k">NODOS</div>
-<div class="ui3-v">'+details.length+'</div>
-</div>
-<div class="ui3-card">
-<div class="ui3-k">TANA</div>
-<div class="ui3-v ready">VALID</div>
-</div>':'';$('chain-nodes').innerHTML=details.length?details.map(d=>'<div class="node-line">
-<b>#'+String(d.indice+1).padStart(2,'0')+'</b>
-<strong>'+safe(d.tipo.toUpperCase())+'</strong>
-<em>'+d.bits+' bits ✓</em>
-</div>').join(''):'<p class="note">Sin cadena verificada.</p>';}
-async function bridge(method,arg){if(!window.pywebview?.api?.[method])throw Error('Desktop Python bridge unavailable. Open with main_auditor.py.');return await window.pywebview.api[method](arg);}
-async function runAudit(){if(busy)return;setBusy(true);try{const r=await bridge('auditar_numero',{n:$('n').value,factor:$('factor').value,modulos:$('modulos').value,p:$('p').value,d:$('d').value,residuos:$('residuos').value});display(r);renderChain(r);}catch(e){display({estado:'ERROR',error:String(e)})}finally{setBusy(false)}}
-async function runCert(){if(busy||!certText)return;setBusy(true);try{const r=await bridge('verificar_json',certText);display(r);renderChain(r);if(r.estado==='PRIMO_POR_DESCARTE')showTab('chain');}catch(e){display({estado:'ERROR',error:String(e)});renderChain({})}finally{setBusy(false)}}
-async function loadCert(ev){const f=ev.target.files?.[0];certText=null;renderChain({});if(!f){$('file-info').textContent=strings[lang].none;$('btn-cert').disabled=true;return}if(f.size>12*1024*1024){display({estado:'ERROR',error:'JSON exceeds 12 MiB input limit'});return}certText=await f.text();$('file-info').textContent=f.name+' · '+(f.size/1024).toFixed(1)+' KiB';$('btn-cert').disabled=false;}
-function loadExample(){certText=JSON.stringify({N:'71',bits_N:7,arbol:[{tipo:'pinza',n:'5'},{tipo:'pinza',n:'7'},{tipo:'multi_pock',n:'71',ancestros:[{q:'5',a:'2'},{q:'7',a:'2'}]}]});$('file-info').textContent='example_71.json';$('btn-cert').disabled=false;}
-function clearAll(){for(const id of ['n','factor','modulos','p','d','residuos','cert-file'])$(id).value='';certText=null;renderChain({});$('btn-cert').disabled=true;$('file-info').textContent=strings[lang].none;$('result-box').innerHTML='';$('status-message').textContent=strings[lang].wait;showTab('audit');}
-renderFlow();
+function renderFlow(active=null,ok=false){$('flow').innerHTML=channels.map((c,i)=>`<div class="ui3-nodo ${active===c?'on':''} ${active===c&&!ok?'bad':''}"><span class="rid">0${i+1} / ${safe(dict[lang].evid)}</span><strong>${safe(dict[lang].labels[i])}</strong><span>${safe(dict[lang].descs[i])}</span></div>`).join('');}
+function setLang(v){lang=v;document.documentElement.lang=v;for(const l of ['es','en'])$('lang-'+l).classList.toggle('active',l===v);const t=dict[v];const ids={'subtitle':'subtitle','tab-audit':'auditTab','tab-chain':'chainTab','tab-about':'aboutTab','num-title':'num','num-help':'numHelp','extra-title':'extra','cert-title':'cert','cert-help':'certHelp','result-title':'result','chain-title':'chain','chain-help':'chainHelp','btn-audit':'audit','btn-cert':'verify','btn-clear':'clear','btn-example':'example','btn-repo':'repo','repo-label':'repoLabel','about-text':'about','side-note':'sideNote','lbl-modulos':'lblMod','lbl-residuos':'lblRes','cert-note':'certNote','about-1':'about1','about-2':'about2'};for(const [id,k] of Object.entries(ids))$(id).textContent=t[k];$('channel-buttons').innerHTML=channels.map((c,i)=>`<button class="btn secondary" id="via-${c}" onclick="runChannel('${c}')" title="${safe(t.descs[i])}">${safe(t.labels[i])}</button>`).join('');$('channel-help').textContent=t.descs[0];if(!busy)$('status-message').textContent=t.wait;if(!certText)$('file-info').textContent=t.none;renderFlow(lastChannel,!!lastResult&&lastResult.estado!=='ERROR');renderChain(lastChain);}
+function setBusy(v){busy=v;for(const id of ['btn-audit','btn-cert','btn-repo','btn-example'])$(id).disabled=v||(id==='btn-cert'&&!certText);for(const c of channels){const el=$('via-'+c);if(el)el.disabled=v;}$('status-message').textContent=v?dict[lang].busy:dict[lang].wait;}
+function evidenceHtml(list){if(!Array.isArray(list)||!list.length)return '';return '<div class="node-list">'+list.map(e=>`<div class="cap-row"><b class="mono">${safe(String(e.via||'').toUpperCase())}</b> · ${safe(e.afirmacion||'')}${e.concluyente?' ✓':''}<span class="note" style="display:block;overflow-wrap:anywhere">${safe([e.descarte,e.datos].filter(Boolean).join(' · '))}</span></div>`).join('')+'</div>';}
+function display(res){lastResult=res;const good=res.estado==='PRIMO_POR_DESCARTE',bad=res.estado==='COMPUESTO_VERIFICADO';const color=good?'ready':bad?'bad':'warn';const details=[res.justificacion||res.error||'',res.bits?`${res.bits} ${dict[lang].bits}`:'',res.nodos?`${res.nodos} ${dict[lang].nodes}`:''].filter(Boolean);$('result-box').innerHTML=`<div class="result-value ${color}">${safe(res.estado||'ERROR')}</div><p style="overflow-wrap:anywhere">${safe(details.join(' · '))}</p>${evidenceHtml(res.evidencias)}`;$('status-message').textContent=good?dict[lang].ready:bad?dict[lang].bad:dict[lang].review;renderFlow(lastChannel,good||bad);}
+let lastChain={};
+function renderChain(res){lastChain=res;const good=res.estado==='PRIMO_POR_DESCARTE';const details=good&&Array.isArray(res.detalles)?res.detalles:[];const nodes=certData&&Array.isArray(certData.arbol)?certData.arbol:[];$('cert-n').textContent=certData&&certData.N!=null?'N = '+String(certData.N):'';$('chain-kpis').innerHTML=good?`<div class="ui3-card"><div class="ui3-k">BITS</div><div class="ui3-v">${safe(res.bits)}</div></div><div class="ui3-card"><div class="ui3-k">${safe(dict[lang].nodes.toUpperCase())}</div><div class="ui3-v">${safe(res.nodos??details.length)}</div></div><div class="ui3-card"><div class="ui3-k">TANA</div><div class="ui3-v ready">VALID</div></div>`:'';$('chain-nodes').innerHTML=details.length?details.map((d,i)=>`<div class="node-line"><b>#${String(i+1).padStart(2,'0')}</b><strong>${safe(d.tipo||nodes[i]?.tipo||'NODE')}<span style="display:block;font-weight:400;overflow-wrap:anywhere">${nodes[i]?.n!=null?'N = '+safe(nodes[i].n):''}</span></strong><em>${safe(d.bits??'')} bits ✓</em></div>`).join(''):`<p class="note">${safe(dict[lang].nochain)}</p>`;}
+async function bridge(method,arg){if(!window.pywebview?.api?.[method])throw Error('Python bridge unavailable. Start the app with: python rum.py');return await window.pywebview.api[method](arg);}
+function payload(){return {n:$('n').value,factor:$('factor').value,modulos:$('modulos').value,p:$('p').value,d:$('d').value,residuos:$('residuos').value};}
+async function executeAudit(channel){if(busy)return;lastChannel=channel;setBusy(true);try{const r=await bridge('auditar_numero',{...payload(),channel});display(r);renderChain({});}catch(e){display({estado:'ERROR',error:String(e)});}finally{setBusy(false);}}
+async function runAudit(){return executeAudit(null);}
+async function runChannel(channel){if(channel==='TANA'){if(certText)await runCert();else $('file-info').textContent=dict[lang].certHelp;return;}const i=channels.indexOf(channel);$('channel-help').textContent=dict[lang].descs[i];return executeAudit(channel);}
+async function runCert(){if(busy||!certText)return;lastChannel='TANA';setBusy(true);try{const r=await bridge('verificar_json',certText);display(r);renderChain(r);if(r.estado==='PRIMO_POR_DESCARTE')showTab('chain');}catch(e){display({estado:'ERROR',error:String(e)});renderChain({});}finally{setBusy(false);}}
+function acceptCert(raw,name){certText=raw;try{certData=JSON.parse(raw);}catch(e){certData=null;certText=null;display({estado:'ERROR',error:String(e)});}$('file-info').textContent=name;$('btn-cert').disabled=!certText;renderChain({});}
+async function loadCert(ev){const f=ev.target.files?.[0];if(!f)return;acceptCert(await f.text(),f.name);}
+async function loadRepoCert(){const name=$('repo-certs').value;if(!name)return;try{const r=await bridge('cargar_certificado',name);acceptCert(r.contenido,r.nombre);}catch(e){display({estado:'ERROR',error:String(e)});}}
+function loadExample(){acceptCert(JSON.stringify({N:'71',bits_N:7,arbol:[{tipo:'pinza',n:'5'},{tipo:'pinza',n:'7'},{tipo:'multi_pock',n:'71',ancestros:[{q:'5',a:'2'},{q:'7',a:'2'}]}]}),'example_71.json');}
+function clearAll(){for(const id of ['n','factor','modulos','p','d','residuos','cert-file'])$(id).value='';certText=null;certData=null;lastChannel=null;lastResult=null;$('btn-cert').disabled=true;$('file-info').textContent=dict[lang].none;$('result-box').textContent='';renderChain({});renderFlow();$('status-message').textContent=dict[lang].wait;showTab('audit');}
+async function initRepo(){try{const r=await bridge('listar_certificados');const select=$('repo-certs');for(const name of r.certificados){const opt=document.createElement('option');opt.value=name;opt.textContent=name;select.appendChild(opt);}}catch(e){$('file-info').textContent=String(e);}}
+setLang('es');renderChain({});window.addEventListener('pywebviewready',initRepo);if(window.pywebview?.api)initRepo();
 </script>
 </body>
 </html>
 '''
 
 
-MAX_JSON_BYTES = 12 * 1024 * 1024
-MAX_N_DIGITS = 100000
 if hasattr(sys, "set_int_max_str_digits"):
     sys.set_int_max_str_digits(0)
+
+CHANNELS = {"FACTOR", "MODULO", "PINZA", "TD", "RESTO"}
+CERT_DIR = Path(__file__).resolve().parents[1] / "certificates"
 
 
 def parse_int(value, label, optional=False):
     s = str(value if value is not None else "").strip()
     if not s and optional:
         return None
-    if not s or len(s.lstrip('+-')) > MAX_N_DIGITS or not s.lstrip('+-').isascii() or not s.lstrip('+-').isdigit():
-        raise ValueError(f"{label}: expected a decimal integer (up to {MAX_N_DIGITS} digits)")
+    digits = s.lstrip("+-")
+    if not digits or not digits.isascii() or not digits.isdigit():
+        raise ValueError(f"{label}: expected a decimal integer")
     return int(s)
 
 
 def parse_list(value, label):
-    if not str(value or '').strip():
+    if not str(value or "").strip():
         return []
-    parts = str(value).split(',')
-    if len(parts) > 1000:
-        raise ValueError(f'{label}: too many entries')
-    return [parse_int(p, label) for p in parts]
+    return [parse_int(part, label) for part in str(value).split(",")]
 
 
 def _verify_cert(raw):
-    if not isinstance(raw, str) or len(raw.encode('utf-8')) > MAX_JSON_BYTES:
-        raise ValueError('JSON missing or exceeds 12 MiB')
+    if not isinstance(raw, str):
+        raise ValueError("JSON text required")
     cert = json.loads(raw)
-    # One mathematical verification, no repeated auditar() pass.
     proof = verificar_certificado_tana(cert)
-    return {'estado':'PRIMO_POR_DESCARTE','justificacion':'Exact deterministic TANA certificate verified',**proof}
+    return {"estado": "PRIMO_POR_DESCARTE", "justificacion": "Exact deterministic TANA certificate verified", **proof}
 
 
 def _audit_numero(payload):
-    n = parse_int(payload.get('n'), 'N')
-    factor = parse_int(payload.get('factor'), 'factor', True)
-    p = parse_int(payload.get('p'), 'p', True)
-    d = parse_int(payload.get('d'), 'd', True)
-    modulos = parse_list(payload.get('modulos'), 'modulos')
-    residuos = parse_list(payload.get('residuos'), 'residuos')
+    n = parse_int(payload.get("n"), "N")
+    channel = payload.get("channel")
+    if channel is not None and channel not in CHANNELS:
+        raise ValueError("Unknown evidence channel")
+    factor = parse_int(payload.get("factor"), "factor", True) if channel in (None, "FACTOR") else None
+    p = parse_int(payload.get("p"), "p", True) if channel in (None, "TD") else None
+    d = parse_int(payload.get("d"), "d", True) if channel in (None, "TD") else None
+    modulos = parse_list(payload.get("modulos"), "modulos") if channel in (None, "MODULO") else []
+    residuos = parse_list(payload.get("residuos"), "residuos") if channel in (None, "RESTO") else []
+    # The auditor always calls PINZA internally. A missing optional canal_bits
+    # must be reported by the engine, not replaced by a UI assertion.
     res = auditar(n, factor=factor, p=p, d=d, modulos=modulos, residuos=residuos)
-    return {'estado':res.estado.value,'justificacion':res.justificacion,'bits':n.bit_length()}
+    evidence = [{"via":e.via, "afirmacion":e.afirmacion, "concluyente":e.concluyente, "descarte":e.descarte, "datos":str(e.datos)} for e in res.evidencias]
+    if channel is not None:
+        wanted = {"FACTOR":"factor", "MODULO":"modulo", "PINZA":"pinza", "TD":"td", "RESTO":"remainder"}[channel]
+        evidence = [e for e in evidence if e["via"] == wanted]
+    return {"estado":res.estado.value, "justificacion":res.justificacion,
+            "bits":n.bit_length(), "evidencias":evidence, "canal":channel}
 
 
 class ApiAuditor:
     def __init__(self):
         self.pool = ThreadPoolExecutor(max_workers=2)
 
+    def listar_certificados(self):
+        return {"certificados":sorted(p.name for p in CERT_DIR.glob("*.json") if p.is_file())}
+
+    def cargar_certificado(self, nombre):
+        if not isinstance(nombre, str) or Path(nombre).name != nombre or not nombre.endswith(".json"):
+            raise ValueError("Invalid certificate name")
+        path = CERT_DIR / nombre
+        if not path.is_file():
+            raise FileNotFoundError(nombre)
+        return {"nombre":nombre, "contenido":path.read_text(encoding="utf-8")}
+
     def verificar_json(self, contenido_json):
         try:
             return self.pool.submit(_verify_cert, contenido_json).result()
-        except (ValueError, TypeError, OverflowError) as exc:
-            return {'estado':'CERTIFICADO_INVALIDO','justificacion':str(exc)}
+        except Exception as exc:
+            return {"estado":"CERTIFICADO_INVALIDO", "justificacion":str(exc)}
 
     def auditar_numero(self, payload):
         try:
             return self.pool.submit(_audit_numero, payload).result()
-        except (ValueError, TypeError, OverflowError) as exc:
-            return {'estado':'ENTRADA_INVALIDA','justificacion':str(exc)}
+        except Exception as exc:
+            return {"estado":"ENTRADA_INVALIDA", "justificacion":str(exc)}
 
 
 def main():
