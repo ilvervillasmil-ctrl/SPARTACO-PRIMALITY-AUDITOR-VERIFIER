@@ -326,6 +326,8 @@ Neither 5 nor 7 closes separately. Combined they give $\ell \equiv 1 \pmod{35}$,
 
 **Proof.** $(\Rightarrow)$ It is TEO-14. $(\Leftarrow)$ Let $\ell$ be a prime divisor of $N$. Since $\gcd(N, 2PD) = 1$, $\ell$ is odd and $\ell \nmid P$, $\ell \nmid D$, and then $\alpha \neq \beta$ modulo $\ell$. Let $\omega = \text{ord}(\alpha/\beta) = \text{ord}(\alpha^2)$. From $U_{N+1} \equiv 0$ we have $\omega \mid N + 1 = 2p$. If $\omega = 1$, $\alpha = \beta$, which is impossible. If $\omega = 2$, then $\alpha^4 = 1$ with $\alpha^2 \neq 1$, hence $\alpha^2 = -1$ and $P = \alpha + \alpha^{-1} = 0$, against $\ell \nmid P$. Therefore $\omega \in \{p, 2p\}$ and $p \mid \omega$. If $D$ is a residue modulo $\ell$, $\alpha/\beta \in \mathbb{F}_\ell^*$ and $\omega \mid \ell - 1$. If it is not, by Frobenius $\alpha^{\ell+1} = \alpha\beta = 1$ and $\beta^{\ell+1} = 1$, hence $\omega \mid \ell + 1$. In both cases $\ell \equiv \pm 1 \pmod p$. Since $\ell$ and $p$ are odd, $\ell \equiv \pm 1 \pmod{2p}$ and $\ell \ge 2p - 1 = N$. Then $\ell = N$. $\square$
 
+<img width="1320" height="257" alt="image" src="https://github.com/user-attachments/assets/ea48e43a-83fc-4114-941d-c4b11973b153" />
+
 ### 7.3 Generalized positive family (T–B4)
 
 **TEO-17 [TEO] (T–B4).** Let $q \ge 3$ be a certified prime, $k \ge 1$, and $2^k \le 2q$. For $N = 2^k \cdot q + 1$:
@@ -335,6 +337,8 @@ Neither 5 nor 7 closes separately. Combined they give $\ell \equiv 1 \pmod{35}$,
 ```
 
 **Proof.** $(\Leftarrow)$ It is TEO-8 with $u = 2^k$, and $q \mid \ell - 1$ for every prime divisor $\ell$. Since $\ell$ is odd, $2q \mid \ell - 1$ and $\ell \ge 2q + 1$. From $2^k \le 2q$, $N \le 2q^2 + 1 < (2q + 1)^2$, so $\sqrt{N} < 2q + 1 \le \ell$ and $N$ is prime (TEO-1). $(\Rightarrow)$ If $N$ is prime, a primitive root $a$ satisfies $a^{N-1} \equiv 1$ and has order $N - 1 = 2^k q > 2^k$, so $a^{2^k} \not\equiv 1$ and $\gcd(a^{2^k} - 1, N) = 1$. $\square$
+
+<img width="1320" height="357" alt="image" src="https://github.com/user-attachments/assets/9b642118-5656-4f8c-827b-63b1737aa629" />
 
 ### 7.4 Generalized negative family (T–B5)
 
@@ -772,6 +776,8 @@ $$
 $$
 
 The search process may employ heuristics, parallelism, sequential procedures, or specific strategies for selecting candidates. However, the certainty of the conclusion does not depend on the procedure used to find the integer $N$, but rather on the exact arithmetic validity of the relationships and witnesses that constitute its certificate.
+
+<img width="1320" height="461" alt="image" src="https://github.com/user-attachments/assets/a8e56d22-68f2-4d03-b22c-6403aaec420b" />
 
 Certification is deterministic, as the acceptance of a certificate implies that the premises of a proven primality theorem have been satisfied. Consequently, the search and the certification are mathematically distinct operations: the former produces candidates and evidence, while the latter deductively establishes primality once sufficient conditions are met.
 
