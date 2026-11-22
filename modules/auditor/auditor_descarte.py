@@ -198,6 +198,39 @@ SEGURIDAD: Dict[str, Any] = {
     "persistencia": "Ninguna.",
 }
 
+
+
+# ◀━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ◀  SECTION B1 — BASIC COMPOSITE FILTER
+# ◀━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ┌──────────────────────────────────────────────────────────────────────┐
+# │  Performs deterministic early composite detection using exact      │
+# │  divisibility by 3, 2, 7, and 5, in that strict order.              │
+# │  Returns a verified divisor and quotient when compositeness is     │
+# │  established. Otherwise, the candidate passes to further audit.    │
+# └──────────────────────────────────────────────────────────────────────┘
+
+def FDP(N: int):
+    """
+    Deterministic basic composite filter.
+
+    Returns:
+        ("COMPUESTO", divisor, quotient)
+            When a nontrivial exact divisor is found.
+
+        ("SUPERA_FILTRO", None, None)
+            When no divisor is found in (3, 2, 7, 5).
+    """
+    if N < 2:
+        raise ValueError("N must be greater than or equal to 2")
+
+    for d in (3, 2, 7, 5):
+        if N > d and N % d == 0:
+            return ("COMPUESTO", d, N // d)
+
+    return ("SUPERA_FILTRO", None, None)
+
+
 # ◢▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬◣
 # ◢  PART 02 — MATHEMATICAL AUDIT STATES
 # ◥▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬◤
