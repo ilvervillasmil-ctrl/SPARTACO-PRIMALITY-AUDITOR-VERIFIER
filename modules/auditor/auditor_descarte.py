@@ -481,14 +481,9 @@ __all__ = ["SEGURIDAD", "EstadoAuditor", "Evidencia", "ResultadoAuditor", "Certi
 
 
 
-
-
-
-
-
 if __name__ == "__main__":
-    # Python 3.11 limita por defecto la conversión de enteros decimales largos.
-    # Solo se desactiva en la interfaz CLI para certificados gigantes.
+    # Python 3.11 limits the conversion of long decimal integers by default.
+    # It is disabled only in the CLI interface for giant certificates.
     sys.set_int_max_str_digits(0) if hasattr(sys, "set_int_max_str_digits") else None
     if len(sys.argv) != 2:
         raise SystemExit("Uso: python auditor_descarte_0_9_1_TANA.py certificado.json")
