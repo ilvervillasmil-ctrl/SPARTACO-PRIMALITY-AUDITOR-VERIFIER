@@ -267,35 +267,61 @@ The case constitutes a verifiable justification of the correctness and early ter
 
 ---
 
-## 9. Extension: Scaling Without Losing the Factor 3
+## 9. Hereditary Divisibility Under Scalar Multiplication
 
-Exactly. This extension reinforces the justification of FDP, because it shows that we can increase the number considerably **without losing its divisibility by 3**.
+### Proposition 4 — Hereditary divisibility
 
-We start from:
-
-$$
-309 = 3 \times 103
-$$
-
-Multiply by three additional factors of 7:
+Let $d, N, m \in \mathbb{Z}$ with $d \ge 2$, $N \ge 2$, $m \ge 1$. If $d \mid N$, then:
 
 $$
-N = 309 \times 7 \times 7 \times 7
+d \mid (N \cdot m)
 $$
 
-$$
-\boxed{N = 105{,}987}
-$$
-
-Now we apply the first FDP check:
+**Proof.** If $d \mid N$, there exists $k \in \mathbb{Z}$ such that $N = dk$. Then:
 
 $$
-105{,}987 \div 3 = \boxed{35{,}329}
+N \cdot m = d\,(k m)
 $$
 
-Exact division. **Composition identified on the very first check.**
+Since $km \in \mathbb{Z}$, it follows that $d \mid (N \cdot m)$. $\blacksquare$
 
-And there is something even more interesting:
+### Corollary 4.1 — Preservation of the factor 3 under powers of 7
+
+Let $N = 309$ and $d = 3$. Since $309 \bmod 3 = 0$, Proposition 4 gives:
+
+$$
+3 \mid (309 \cdot 7^k) \quad \text{for every } k \ge 0
+$$
+
+### Proposition 5 — Invariance of first-check detection under scaling
+
+Let $N_k = 309 \cdot 7^k$ for $k \ge 0$. Under the FDP divisor order $D = (3, 2, 7, 5)$:
+
+$$
+\text{FDP}(N_k) = (\text{COMPOSITE},\, 3,\, N_k/3) \quad \text{for every } k \ge 0
+$$
+
+**Proof.** By Corollary 4.1, $3 \mid N_k$. Since 3 occupies the first position of $D$, the first check of FDP succeeds. By Proposition 3, execution terminates at that check without evaluating divisors 2, 7, or 5. $\blacksquare$
+
+### Application to the case $k = 3$
+
+$$
+N_3 = 309 \times 7^3 = 309 \times 343 = 105{,}987
+$$
+
+First check:
+
+$$
+105{,}987 \bmod 3 = 0
+$$
+
+Exact division:
+
+$$
+105{,}987 \div 3 = 35{,}329
+$$
+
+Full factorization:
 
 $$
 35{,}329 = 103 \times 7^3
@@ -307,42 +333,28 @@ $$
 \boxed{105{,}987 = 3 \times 103 \times 7^3}
 $$
 
-### Mathematical closing argument for justification B1
+### Family of candidates and first-check behavior
 
-The original construction contains factors of 7 and 2, combined through sums, and produces the number 309, which is divisible by 3.
+For $N_k = 309 \cdot 7^k$:
 
-Subsequently, by multiplying that result by $7^3$, we obtain 105,987 — a considerably larger number that **preserves the factor 3**.
+| $k$ | $N_k = 309 \cdot 7^k$ | First check | Quotient | Verdict |
+|:---:|:----------------------:|:-----------:|:--------:|:-------:|
+| 0 | 309 | $309 \bmod 3 = 0$ | 103 | COMPOSITE |
+| 1 | 2,163 | $2{,}163 \bmod 3 = 0$ | 721 | COMPOSITE |
+| 2 | 15,141 | $15{,}141 \bmod 3 = 0$ | 5,047 | COMPOSITE |
+| 3 | 105,987 | $105{,}987 \bmod 3 = 0$ | 35,329 | COMPOSITE |
 
-The mathematical reason is:
+### Formal consequence
+
+By Propositions 4 and 5, the parameter $k$ does not affect the position of the detected divisor within $D$. Scalar multiplication by powers of 7 preserves the divisibility already present in $N$ and leaves the first-check verdict of FDP invariant.
+
+Hence, for the family $\{N_k\}_{k \ge 0}$:
 
 $$
-3 \mid 309 \quad \Longrightarrow \quad 3 \mid (309 \times 7^k)
+\boxed{\forall k \ge 0,\quad \text{FDP}(N_k) = (\text{COMPOSITE},\, 3,\, N_k/3)}
 $$
 
-for any integer $k \ge 0$.
-
-This means we can construct a **complete family of composite numbers**:
-
-$$
-\boxed{N_k = 309 \times 7^k}
-$$
-
-And FDP will detect them **always on its first check**, regardless of how much they grow.
-
-### Family of candidates — first FDP check
-
-| $k$ | Candidate $N_k = 309 \times 7^k$ | First check | Verdict |
-|:---:|:---------------------------------:|:-----------:|:-------:|
-| 0 | 309 | $309 \div 3 = 103$ | COMPOSITE |
-| 1 | 2,163 | $2{,}163 \div 3 = 721$ | COMPOSITE |
-| 2 | 15,141 | $15{,}141 \div 3 = 5{,}047$ | COMPOSITE |
-| 3 | 105,987 | $105{,}987 \div 3 = 35{,}329$ | COMPOSITE |
-
-### Conclusion for SPARTACO
-
-Increasing the size of a candidate by multiplying it with additional factors **does not eliminate a divisor it already has**. FDP can recognize that composition with a single divisibility test by 3, without traversing the remaining divisors and without starting the auditor.
-
-That is a mathematically solid closing argument for this example.
+The size of the candidate grows with $k$; the position of the detected divisor within $D$ does not change.
 
 ---
 
