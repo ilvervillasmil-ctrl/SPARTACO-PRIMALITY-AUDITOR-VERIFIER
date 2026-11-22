@@ -171,13 +171,15 @@ A certified prime is a mathematical result\. It is **not automatically a secure 
 
 SPARTACO Primality Auditor & Verifier is available free of charge for personal, educational, and non-commercial research use under the SPARTACO Primality Auditor Community License v1.0. The full terms are in the [LICENSE](LICENSE.md) file.
 
-This license covers the Python source code, the desktop interface, the launcher, the 40 JSON certificate files, and the documentation [TANA](TANA.md). Each material has specific permissions, described in the [LICENSE](LICENSE.md) file.
+This license covers the Python source code, the desktop interface, the launcher, the 40 JSON certificate files, and the documentation [TANA](modules/auditor/docs/TANA.md). Each material has specific permissions, described in the [LICENSE](LICENSE.md) file.
 
 Commercial use, enterprise deployment, product integration, commercial redistribution, and commercial exploitation of modified versions require a separate commercial license. **This includes internal use by a company, even when the auditor is neither sold nor redistributed.**
 
 The following are not included in the free license and are provided only under a separate written agreement and for a fee: additions or changes requested by you, maintenance, customization, and any other support or development work.
 
 The auditor is distributed independently of the proprietary SPARTACO SECURITY, OM337, and UIS–OMEGA technologies, which are not licensed by this repository. Third-party components, such as `pywebview`, keep their own licenses.
+
+***DOCUMENTATION AND CONTEXT*** [CONTEXT](modules/docs/docs.md) 
 
 The official versions and updates are those published in this repository.
 
@@ -188,6 +190,7 @@ For commercial licensing and enterprise agreements, contact the rights holder th
 **Ilver Villasmil**
 Email: Ilvervillasmil@gmail.com
 Phone: +1 (512) 923-7344
+
 
 ---
 
