@@ -542,7 +542,9 @@ The assertion that the search algorithm finds a prime within each specified rang
 \mathrm{Hypothesis}_{T\text{-}MA1}(N).
 ```
 
-This second proposition is also deterministic; however, it is established by the system’s construction and coverage theorems, rather than being derived solely from the certification implication. ### 13.2 The Performative Contradiction
+This second proposition is also deterministic; however, it is established by the system’s construction and coverage theorems, rather than being derived solely from the certification implication.
+
+### 13.2 The Performative Contradiction
 
 If one accepts that all the sufficient hypotheses for a deterministic theorem (such as T–MA1) have been verified, yet still denies that the resulting number is mathematically certified, one incurs a **logical contradiction** with the accepted theorem.
 
