@@ -1,7 +1,7 @@
 # =============================================================================
 # SPARTACO SECURITY | OMEGA337
 # =============================================================================
-# MODULE      : run.py
+# MODULE      : rum.py
 # COMPONENT   : APPLICATION BOOTSTRAP & LAUNCHER
 # SYSTEM      : SPARTACO PRIMALITY AUDITOR & VERIFIER
 # ARCHITECTURE: UIS–TANA–OMEGA
@@ -34,10 +34,12 @@
 # ---------------------
 # Copyright (c) 2026 Ilver Villasmil.
 # SPARTACO SECURITY / OMEGA337.
-# All rights reserved.
+# All rights reserved except as expressly licensed.
 #
-# Distribution, modification, and commercial use are subject to the
-# applicable software license.
+# Use and redistribution are governed by the SPARTACO Primality Auditor
+# Community License v1.0 (see the LICENSE file). Free for personal,
+# educational, and non-commercial research use. Commercial use, including
+# internal use by a company, requires a separate commercial license.
 #
 # =============================================================================
 # END OF MODULE HEADER
