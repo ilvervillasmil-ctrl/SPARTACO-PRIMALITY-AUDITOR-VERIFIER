@@ -143,7 +143,7 @@ The distinction matters:
 
 The verifier is a useful tool in its own right, not merely a viewer for OM337 output\.
 
-**SPARTACO SECURITY / OMEGA337 — originating technology and research:** &#91;[Insert official project repository link](https://www.academia.edu/176025899/SPARTACO_SECURITY)&#93;
+**SPARTACO SECURITY / OMEGA337 — originating technology and research:** &#91;[(https://www.academia.edu/176025899/SPARTACO_SECURITY)]&#93;
 
 ## Inspect the mathematics
 
