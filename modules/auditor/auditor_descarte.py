@@ -204,10 +204,10 @@ SEGURIDAD: Dict[str, Any] = {
 # ◀  SECTION B1 — BASIC COMPOSITE FILTER
 # ◀━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ┌──────────────────────────────────────────────────────────────────────┐
-# │  Performs deterministic early composite detection using exact      │
-# │  divisibility by 3, 2, 7, and 5, in that strict order.              │
-# │  Returns a verified divisor and quotient when compositeness is     │
-# │  established. Otherwise, the candidate passes to further audit.    │
+# │  Performs deterministic early composite detection using exact        │
+# │  divisibility by 3, 2, 7, and 5, in that strict order.               │
+# │  Returns a verified divisor and quotient when compositeness is       │
+# │  established. Otherwise, the candidate passes to further audit.      │
 # └──────────────────────────────────────────────────────────────────────┘
 
 def FDP(N: int):
