@@ -494,15 +494,34 @@ def auditar(n: int, factor: Optional[int] = None, p: Optional[int] = None,
 __all__ = ["SEGURIDAD", "EstadoAuditor", "Evidencia", "ResultadoAuditor", "CertificadoInvalido", "verificar_certificado_tana", "via_certificado_tana", "combinar", "auditar"]
 
 
-
-
+# ==============================================================================
+#  NOTE ON PINZA / NOTA SOBRE PINZA
+# ==============================================================================
+#
+# PINZA (channel 03) is NOT enabled in this public distribution.
+#
+# It consults an external function (canal_bits.es_primo) that belongs to the
+# private OM337 engine and is not included here. In this distribution that
+# channel always reports "Pinza not available" and contributes no verdict.
+# The public auditor does not depend on it: its verdicts come only from the
+# FACTOR, MODULO, TD, RESTO and TANA channels.
+#
+# PINZA (vía 03) NO está habilitada en esta distribución pública. Consulta una
+# función externa del motor privado OM337 que no se incluye aquí. El auditor
+# público no depende de ella. El motor privado y sus vías quedan fuera del
+# alcance de esta distribución.
+#
+# ==============================================================================
 if __name__ == "__main__":
     # Python 3.11 limits the conversion of long decimal integers by default.
     # It is disabled only in the CLI interface for giant certificates.
     sys.set_int_max_str_digits(0) if hasattr(sys, "set_int_max_str_digits") else None
     if len(sys.argv) != 2:
-        raise SystemExit("Uso: python auditor_descarte_0_9_1_TANA.py certificado.json")
+        raise SystemExit("Usage: python auditor_descarte.py certificate.json")
     from pathlib import Path
-    certificado = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-    resultado = verificar_certificado_tana(certificado)
+    try:
+        certificado = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+        resultado = verificar_certificado_tana(certificado)
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"Certificate rejected: {exc}")
     print(json.dumps(resultado, ensure_ascii=False, indent=2))
