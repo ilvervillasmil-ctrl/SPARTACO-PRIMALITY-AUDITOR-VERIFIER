@@ -1,3 +1,6 @@
+<img width="1172" height="237" alt="image" src="https://github.com/user-attachments/assets/64c40556-8131-49ea-a337-4a6827b136e0" />
+
+
 SPARTACO PRIMALITY AUDITOR COMMUNITY LICENSE
 Version 1.0
 
@@ -232,3 +235,6 @@ WITH THE LICENSED MATERIALS OR THEIR USE OR OTHER DEALINGS IN THEM.
 --------------------------------------------------------------------------------
 Copyright (c) 2026 Ilver Villasmil. All rights reserved except as expressly
 licensed above.
+
+<img width="1172" height="237" alt="image" src="https://github.com/user-attachments/assets/56df1d5a-4f25-40df-9755-79ab3efee20d" />
+
