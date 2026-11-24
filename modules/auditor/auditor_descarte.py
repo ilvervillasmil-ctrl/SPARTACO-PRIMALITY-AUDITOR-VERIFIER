@@ -25,21 +25,6 @@
 # VISIBILITY:          PUBLIC CANDIDATE
 # ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 # ==============================================================================
-#  I. MISSION / MISIÓN
-# ==============================================================================
-#
-# Independently evaluate mathematical evidence associated with an integer N.
-#
-# Evaluar evidencias matemáticas asociadas a un entero N mediante relaciones
-# verificables, sin reproducir el procedimiento utilizado para descubrirlo.
-#
-# PRINCIPLE OF SEPARATION:
-#
-#     THE DISCOVERY ENGINE IS NOT THE INDEPENDENT VERIFIER.
-#
-#     QUIEN DESCUBRE NO ES QUIEN VERIFICA.
-#
-# ==============================================================================
 #  II. MATHEMATICAL FOUNDATION / FUNDAMENTO MATEMÁTICO
 # ==============================================================================
 #
@@ -51,16 +36,32 @@
 # La primalidad requiere evidencia suficiente para excluir rigurosamente
 # todos los casos de composición aplicables.
 #
+# The integer N is the single source of truth: every verdict is an exact
+# computation on N. Bits, digits and SHA-256(N) are derived from N alone.
+#
 # ==============================================================================
 #  III. EVIDENCE CHANNELS / VÍAS DE EVIDENCIA
 # ==============================================================================
 #
-#     [01] FACTOR    Exact nontrivial divisor verification
-#     [02] MODULO    Modular divisibility verification
-#     [03] PINZA     External primality-function consultation
-#     [04] TD        Algebraic identity N = 2p + d
-#     [05] RESTO     Divisibility checks against supplied residues
-#     [06] TANA      Exact deterministic certificate verification
+#     [01] FACTOR    Exact nontrivial divisor: 1 < f < N, N mod f = 0
+#     [02] MODULO    Supplied moduli: 1 < m < N, N ≡ 0 (mod m)
+#     [03] PINZA     Private OM337 engine: NOT enabled in this public
+#                    distribution, never decides (see NOTE ON PINZA)
+#     [04] TD        UIS identity N = 2p + d: a mismatch is a contradiction;
+#                    a match is context only, never a primality proof
+#     [05] RESTO     Supplied divisors: 1 < r < N, N mod r = 0
+#     [06] TANA      Exact deterministic certificate chain: pinza leaf
+#                    (TEO-5), Pocklington (TEO-9), Multi-Pocklington
+#                    (TEO-12), Lucas (TEO-16 / TEO-18), ancestors (TEO-21)
+#
+# Verdict priority in combinar():
+#     TD contradiction  >  FACTOR / MODULO / RESTO (composite)
+#     >  TANA (prime)  >  insufficient evidence
+#
+# Public manual tools (same theorem functions, no private logic):
+#     FDP B1 filter, exact trial division, Miller–Rabin (deterministic
+#     for N < 2^64; for N ≥ 2^64 only compositeness witnesses), and manual
+#     Pocklington / Multi-Pocklington / Lucas steps.
 #
 # The auditor distinguishes verifiable mathematical relations from
 # declarations, labels, and unsupported claims.
@@ -69,49 +70,73 @@
 #  IV. AUDIT STATES / ESTADOS DE AUDITORÍA
 # ==============================================================================
 #
+# Channel verdict (auditar / combinar):
+#
 #     COMPUESTO_VERIFICADO
 #         A nontrivial divisor of N has been verified.
 #
 #     PRIMO_POR_DESCARTE
-#         Reserved for a mathematically sufficient primality proof.
+#         A complete TANA chain was verified exactly for this N: every
+#         prime factor ≤ √N is excluded.
 #
 #     EVIDENCIA_INSUFICIENTE
 #         Available evidence does not establish the required conclusion.
 #
 #     CONTRADICCION_DETECTADA
-#         A declared mathematical relationship is inconsistent.
+#         A declared mathematical relationship (N = 2p + d) is inconsistent.
+#
+# Certificate verdict (verificar_certificado_tana):
+#     PRIMO_CERTIFICADO  /  CERTIFICADO_INVALIDO
+#
+# Metadata state (reported separately, never a proof):
+#     COHERENTES  /  INCOHERENTES  /  SIN_METADATOS
+#
+# Manual verification:
+#     PRIMO_DETERMINISTA, COMPUESTO_VERIFICADO, NO_PRIMO,
+#     EVIDENCIA_INSUFICIENTE, PASO_VALIDO_PREMISA_EXTERNA, PASO_RECHAZADO
 #
 # ==============================================================================
 #  V. ARCHITECTURAL BOUNDARY / LÍMITE ARQUITECTÓNICO
 # ==============================================================================
 #
 # THIS MODULE:
-#     - Receives mathematical evidence.
-#     - Recalculates supported arithmetic relationships.
-#     - Detects certain inconsistencies.
-#     - Confirms compositeness through verified nontrivial divisors.
-#     - Returns structured audit results.
+#     - Receives mathematical evidence, external or internal certificates,
+#       and hand-typed integers.
+#     - Parses every integer exactly (no floats, no digit limit).
+#     - Recalculates supported arithmetic relationships exactly.
+#     - Detects inconsistencies between declared relations and N.
+#     - Confirms compositeness through verified nontrivial divisors or
+#       Miller–Rabin witnesses.
+#     - Establishes primality only through exact theorems: a TANA chain,
+#       complete trial division, Miller–Rabin with Sinclair's bases for
+#       N < 2^64, or a manual theorem step whose premises are proven.
+#     - Keeps the mathematical verdict separate from metadata, and
+#       SHA-256(N) separate from SHA-256(JSON).
+#     - Returns structured bilingual (ES / EN) audit results.
 #
 # THIS MODULE DOES NOT:
 #     - Reproduce the private discovery algorithm.
+#     - Include or import PINZA or any private OM337 engine logic.
 #     - Modify the OMEGA 337 engine.
+#     - Build, approve, or replace OM337 certificates.
 #     - Expose private optimization techniques.
-#     - Accept a declared primality state as mathematical proof.
+#     - Accept a declared primality state, label, or file name as proof.
+#     - Claim primality from a probabilistic test.
 #
 # ==============================================================================
 #  VI. INTEGRATION / INTEGRACIÓN
 # ==============================================================================
 #
-# PRIVATE MATHEMATICAL ENGINE
+# PRIVATE ENGINE  /  EXTERNAL CERTIFICATE  /  HAND-TYPED N
 #             |
 #             v
 #     MATHEMATICAL EVIDENCE
 #             |
 #             v
-#      AUDITOR_DESCARTE
+#      AUDITOR_DESCARTE  (public tools only)
 #             |
 #             v
-#      STRUCTURED AUDIT RESULT
+#      STRUCTURED AUDIT RESULT  (mathematical verdict + metadata state)
 #
 # Integration context:
 #     OM337  module (mathematical ecosystem)
@@ -180,9 +205,10 @@ SEGURIDAD: Dict[str, Any] = {
     "visibilidad": "PUBLICO",
 
     "hace": (
-        "Independently evaluates mathematical evidence "
         "produced by the discovery engine through factor, "
-        "modular, Pinza, TD, remainder and TANA certificate verification. "
+        "modular, TD, remainder and TANA certificate verification "
+        "(Pinza is private and not included). "
+        "Independently evaluates mathematical evidence "
         "Classifies results as COMPUESTO_VERIFICADO, "
         "PRIMO_POR_DESCARTE, EVIDENCIA_INSUFICIENTE, "
         "or CONTRADICCION_DETECTADA. "
