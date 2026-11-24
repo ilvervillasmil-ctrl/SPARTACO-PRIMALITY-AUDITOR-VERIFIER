@@ -1495,7 +1495,7 @@ def combinar(n: int, evidencias: list[Evidencia], motor_estado: str = "") -> Res
 # ◢  PART 09 — MATHEMATICAL AUDIT ENTRY POINT
 # ◥▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬◤
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃  Coordinates all five mathematical evidence channels.        ┃
+# ┃  Coordinates the six channels; PINZA is disabled (no verdict)┃
 # ┃  Collects results without modifying the discovery engine.    ┃
 # ┃  Delegates the final audit verdict to combinar().            ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
