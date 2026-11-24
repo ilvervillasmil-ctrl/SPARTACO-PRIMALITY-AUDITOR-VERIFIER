@@ -1,6 +1,6 @@
 # ==============================================================================
 # SPARTACO / OM337 — DETERMINISTIC AUDITOR INTERFACE
-# Desktop interface for the SPARTACO Primality Auditor & Verifier (v0.9.1)
+# Desktop interface for the SPARTACO Primality Auditor & Verifier (v0.9.3)
 # ==============================================================================
 #
 # WHAT THIS IS
@@ -9,14 +9,18 @@
 #   here is produced by auditor_descarte.py, which must sit alongside this file.
 #
 # WHAT IT DOES
-#   - Exposes the six evidence channels of the auditor as separate controls:
-#     FACTOR, MODULO, PINZA, TD (N = 2p + d), RESTO (remainder) and TANA.
-#   - Runs each channel on an integer N and displays the verdict, the
-#     justification and the evidence each channel contributed.
-#   - Loads a JSON certificate from the user's disk or from the certificates
-#     folder of this repository, verifies its TANA chain with exact integer
-#     arithmetic, and shows N and every node of the chain.
-#   - Runs entirely offline, in English and Spanish.
+#   - Verifies a hand-typed integer N with public deterministic tools (FDP,
+#     exact trial division, Miller-Rabin with Sinclair's bases for N < 2^64,
+#     compositeness witnesses) and manual Pocklington / Multi-Pocklington /
+#     Lucas (T-B2) steps that reuse the certificate node functions.
+#   - Exposes the five public evidence channels as working controls:
+#     FACTOR, MODULO, TD (N = 2p + d), RESTO (remainder) and TANA. PINZA is
+#     private engine logic and is shown only as a non-clickable notice.
+#   - Loads a JSON certificate from the repository, a local file, drag and
+#     drop or pasted text; shows all of its metadata, N (preview + full
+#     number), bits, digits, SHA-256(N), SHA-256(JSON) and every node, and
+#     verifies the whole chain or any single node.
+#   - Runs entirely offline, fully bilingual (Spanish / English).
 #
 # WHAT IT DOES NOT DO
 #   It does not generate primes, does not access the proprietary OM337 or
@@ -36,7 +40,10 @@ import json
 import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from auditor_descarte import auditar, verificar_certificado_tana, CertificadoInvalido
+import re
+from auditor_descarte import (auditar, verificar_certificado_tana, CertificadoInvalido, EnteroInvalido,
+                              entero_estricto, identidad_entero, inspeccionar_certificado,
+                              verificar_nodo_certificado, verificar_numero_manual, verificar_paso_manual)
 
 CARA = {"id": "SPARTACO_AUDITOR", "nombre": {"es": "Auditor determinista", "en": "Deterministic auditor"}}
 
@@ -47,6 +54,7 @@ HTML = r'''
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SPARTACO / OM337 — Auditor</title>
+<link rel="icon" href="data:,">
 <style>
 /* ===============================================================
  * COLORES Y CAJA
@@ -272,8 +280,8 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 .audit-kpis{grid-template-columns:1fr 1fr}}
 
 /* ===============================================================
- * EMBLEMA DEL AUDITOR - misma fortaleza de anillos de la portada,
- * con el contenido del auditor: 4 veredictos, 6 vias, 3 nodos TANA, N.
+ * EMBLEMA DEL AUDITOR,
+ * contenido del auditor: 4 veredictos, 6 vias, 3 nodos TANA, N.
  * No opera. Solo presenta.
  * =============================================================== */
 .emb{--e:300px;position:relative;flex:0 0 auto;width:var(--e);aspect-ratio:1}
@@ -323,6 +331,50 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 .emb-sm .emb-ley{font-size:calc(var(--e)*.2)}
 .emb-lg+.note{text-align:center;max-width:640px;margin:0 auto 14px}
 @media (prefers-reduced-motion:reduce){.emb-rotor,.emb-chip,.emb-disc{animation:none!important}.emb .lang{transition:none}}
+/* ===============================================================
+ * v0.9.3 — NUMBER VIEWER, NODE INSPECTOR, MANUAL TOOLS
+ * =============================================================== */
+.sub{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
+.sub h3{margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.seg button{border:1px solid rgba(56,189,248,.22);background:rgba(12,22,40,.8);color:var(--text2);border-radius:999px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer}
+.seg button.active{background:rgba(37,99,235,.45);border-color:var(--cyan);color:#fff}
+.pinza-badge{margin-top:10px;font-size:11px;color:var(--muted);border:1px dashed rgba(143,160,183,.45);border-radius:8px;padding:6px 9px;display:inline-block;cursor:default;user-select:none}
+.ui3-nodo.off{opacity:.55;border-style:dashed}
+.numbox{margin:8px 0;padding:10px;border:1px solid rgba(56,189,248,.18);border-radius:10px;background:rgba(6,14,26,.7)}
+.numbox .lbl{font-size:11px;color:var(--muted);letter-spacing:.04em;margin-bottom:4px}
+.num-prev{font-family:ui-monospace,monospace;color:#e8eef6;font-size:13px;word-break:break-all}
+.num-full{font-family:ui-monospace,monospace;color:#e8eef6;font-size:12px;word-break:break-all;white-space:pre-wrap;max-height:260px;overflow:auto;background:#050c16;border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:6px}
+.num-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:11px;color:var(--text2);align-items:center}
+.num-meta b{color:var(--cyan);font-weight:700}
+.hash{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;color:#cbd5e1}
+.mini{padding:4px 9px!important;font-size:11px!important;border-radius:8px!important}
+.drop{border:1px dashed rgba(56,189,248,.4);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.drop.over{background:rgba(37,99,235,.15);border-color:var(--cyan)}
+.chk{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.chk td,.chk th{border-top:1px solid var(--border);padding:6px;vertical-align:top;text-align:left}
+.chk th{color:var(--muted);font-weight:700}
+.chk td.f{font-family:ui-monospace,monospace;color:#bae6fd;white-space:nowrap}
+.chk td.d{color:var(--text2);word-break:break-word}
+.okc{color:var(--green);font-weight:800}.koc{color:var(--red);font-weight:800}
+.kv{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:4px 12px;font-size:12px;margin:8px 0}
+.kv div:nth-child(odd){color:var(--muted)}
+.kv div:nth-child(even){color:var(--text2);word-break:break-word}
+.node-card{border:1px solid rgba(56,189,248,.18);border-radius:12px;padding:12px;margin:10px 0;background:rgba(9,20,36,.75)}
+.node-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.node-head .t{font-weight:800}
+.node-head .t b{color:var(--cyan);margin-right:6px}
+.node-res{margin-top:8px;padding:10px;border-radius:10px;border:1px solid var(--border);background:#071222}
+.kpis4{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:10px 0}
+.kpis4 .ui3-card{min-height:70px}
+.toast{position:fixed;right:18px;bottom:18px;background:#0f766e;color:#fff;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;opacity:0;transition:opacity .2s;z-index:99;pointer-events:none}
+.toast.on{opacity:1}
+.arch h3{margin-top:14px}
+.arch ul{margin:4px 0 8px 18px;padding:0;font-size:13px;color:var(--text2);line-height:1.55}
+.arch td,.arch th{font-size:12px}
+select{-webkit-appearance:none;appearance:none;background-color:#081220!important;color:var(--text)!important;background-image:linear-gradient(45deg,transparent 50%,#38bdf8 50%),linear-gradient(135deg,#38bdf8 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px!important}
+select option{background:#0b1626;color:#f8fafc}
+input::placeholder,textarea::placeholder{color:#5b6b82}
 </style>
 </head>
 <body>
@@ -338,134 +390,261 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:9px;pa
 </div>
 <div class="ui3-marca">
 <p>OM337 · AUDITOR</p>
-<div class="ui3-flujo" id="flow">
-</div>
+<div class="ui3-flujo" id="flow"></div>
 </div>
 <div class="muelle">
 <div class="muelle-card">
 <div class="muelle-k">SPARTACO / OM337</div>
-<div class="muelle-v" id="side-state">OFFLINE</div>
-<div class="muelle-n" id="side-note">DETERMINISTA · 6 VÍAS</div>
+<div class="muelle-v">OFFLINE</div>
+<div class="muelle-n" data-i18n="sideNote"></div>
 </div>
-<div class="statusbar">INDEPENDENT MATHEMATICAL VERIFIER</div>
+<div class="statusbar" data-i18n="statusbar"></div>
 </div>
 </aside>
 <main class="main">
 <div class="audit-header">
 <div>
-<h1>SPARTACO <span class="mono">/ OM337</span>
-</h1>
-<p class="subtitle" id="subtitle">Auditor matemático independiente · Sin conexión · Sin motor privado</p>
+<h1>SPARTACO <span class="mono">/ OM337</span></h1>
+<p class="subtitle" data-i18n="subtitle"></p>
 </div>
-<span class="pill pill-ok">OFFLINE · v0.9.1</span>
+<span class="pill pill-ok">OFFLINE · v0.9.3</span>
 </div>
 <nav id="user-hbar" class="hbar">
-<button id="tab-audit" class="active" onclick="showTab('audit')">AUDITORÍA</button>
-<button id="tab-chain" onclick="showTab('chain')">CADENA TANA</button>
-<button id="tab-about" onclick="showTab('about')">ARQUITECTURA</button>
+<button id="tab-audit" class="active" onclick="showTab('audit')" data-i18n="auditTab"></button>
+<button id="tab-chain" onclick="showTab('chain')" data-i18n="chainTab"></button>
+<button id="tab-about" onclick="showTab('about')" data-i18n="aboutTab"></button>
 </nav>
 <section id="view-audit">
 <div class="audit-grid">
-<div class="panel">
-<h2 id="num-title">01 / Número entero</h2>
-<p class="note" id="num-help">Introduce N. Opcionalmente aporta un divisor o evidencias adicionales. Sin certificado no se declara primo.</p>
-<label for="n">N · INTEGER</label>
-<textarea id="n" rows="3" spellcheck="false" placeholder="17">
-</textarea>
-<details>
-<summary id="extra-title">Evidencias opcionales</summary>
-<div class="two">
-<div>
-<label>FACTOR</label>
-<input id="factor" type="text" placeholder="3">
-<label>P (N = 2p + d)</label>
-<input id="p" type="text" placeholder="">
-</div>
-<div>
-<label id="lbl-modulos">MÓDULOS (separados por coma)</label>
-<input id="modulos" type="text" placeholder="3, 5">
-<label>D (N = 2p + d)</label>
-<input id="d" type="text" placeholder="">
-</div>
-</div>
-<label id="lbl-residuos">RESTOS / DIVISORES (separados por coma)</label>
-<input id="residuos" type="text" placeholder="">
-</details>
-<div class="actions" id="channel-buttons" style="flex-wrap:wrap"></div>
-<p class="note" id="channel-help"></p>
+<div class="panel" id="panel-01">
+<h2 data-i18n="p1Title"></h2>
+<p class="note" data-i18n="p1Help"></p>
+<label for="n" data-i18n="lblN"></label>
+<textarea id="n" rows="3" spellcheck="false" data-i18n-ph="phN" oninput="onNInput()"></textarea>
+<div id="n-ident"></div>
 <div class="actions">
-<button class="btn primary" id="btn-audit" onclick="runAudit()">AUDITAR N</button>
-<button class="btn secondary" onclick="clearAll()" id="btn-clear">LIMPIAR</button>
+<button class="btn primary" id="btn-manual" onclick="runManual()" data-i18n="btnManual"></button>
+<button class="btn secondary" id="btn-clear" onclick="clearAll()" data-i18n="btnClear"></button>
 </div>
+<div class="sub">
+<h3 data-i18n="chanTitle"></h3>
+<p class="note" data-i18n="chanHelp"></p>
+<div class="seg" id="chan-seg"></div>
+<div id="chan-fields"></div>
+<div class="actions"><button class="btn primary" id="btn-chan" onclick="runChannel()"></button></div>
+<div class="pinza-badge" data-i18n="pinzaBadge" title=""></div>
 </div>
-<div class="panel">
-<h2 id="cert-title">02 / Certificado JSON</h2>
-<p class="note" id="cert-help">Selecciona un archivo local. La validación TANA se ejecuta una sola vez al pulsar verificar.</p>
-<label for="cert-file">CERTIFICADO · .JSON</label>
-<input id="cert-file" type="file" accept=".json,application/json" onchange="loadCert(event)">
-<div class="file-caption" id="file-info">Ningún archivo seleccionado</div>
-<label id="repo-label" for="repo-certs">CERTIFICADOS DEL REPOSITORIO</label>
-<select id="repo-certs" style="width:100%;padding:12px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px"><option value="">—</option></select>
+<div class="sub">
+<h3 data-i18n="stepTitle"></h3>
+<p class="note" data-i18n="stepHelp"></p>
+<div class="seg" id="step-seg"></div>
+<div id="step-fields"></div>
 <div class="actions">
-<button class="btn secondary" id="btn-repo" onclick="loadRepoCert()">CARGAR DEL REPOSITORIO</button>
+<button class="btn primary" id="btn-step" onclick="runStep()" data-i18n="btnStep"></button>
+<button class="btn secondary" id="btn-step-ex" onclick="stepExample()" data-i18n="btnStepEx"></button>
 </div>
+</div>
+</div>
+<div class="panel" id="panel-02">
+<h2 data-i18n="p2Title"></h2>
+<p class="note" data-i18n="p2Help"></p>
+<label for="repo-certs" data-i18n="lblRepo"></label>
+<select id="repo-certs" onchange="updateButtons()" style="width:100%"><option value="" data-i18n="optChoose"></option></select>
 <div class="actions">
-<button class="btn primary" id="btn-cert" onclick="runCert()" disabled>VERIFICAR CERTIFICADO</button>
-<button class="btn secondary" id="btn-example" onclick="loadExample()">EJEMPLO LOCAL</button>
+<button class="btn secondary" id="btn-repo" onclick="loadRepoCert()" data-i18n="btnRepo"></button>
+<button class="btn secondary" id="btn-example" onclick="loadExample()" data-i18n="btnExample71"></button>
 </div>
-<p class="note" id="cert-note">El ejemplo local es un certificado pequeño de prueba. El certificado gigante se puede cargar desde disco.</p>
+<label for="cert-file" data-i18n="lblFile"></label>
+<div class="drop" id="drop" ondragover="dragOver(event,true)" ondragleave="dragOver(event,false)" ondrop="dropFile(event)">
+<input id="cert-file" type="file" accept=".json,application/json" onchange="loadCertFile(event)">
+<span data-i18n="dropHint"></span>
+</div>
+<label for="cert-paste" data-i18n="lblPaste"></label>
+<textarea id="cert-paste" rows="3" spellcheck="false" data-i18n-ph="phPaste" oninput="updateButtons()"></textarea>
+<div class="actions"><button class="btn secondary" id="btn-paste" onclick="usePasted()" data-i18n="btnPaste"></button></div>
+<div id="cert-status" class="file-caption"></div>
+<div class="actions">
+<button class="btn primary" id="btn-cert" onclick="runCert()" data-i18n="btnVerifyCert"></button>
+<button class="btn secondary" id="btn-view-chain" onclick="showTab('chain')" data-i18n="btnViewChain"></button>
+</div>
 </div>
 <div class="panel wide">
 <div class="audit-header">
-<h2 id="result-title">03 / Dictamen matemático</h2>
-<span class="pill pill-opt" id="status-message">EN ESPERA</span>
+<h2 data-i18n="p3Title"></h2>
+<span class="pill pill-opt" id="status-message"></span>
 </div>
-<div id="result-box">
-<p class="note">El resultado aparecerá aquí después de ejecutar el auditor.</p>
-</div>
+<div id="result-box"></div>
 </div>
 </div>
 </section>
 <section id="view-chain" class="hidden">
 <div class="panel">
-<h2 id="chain-title">Cadena de certificación TANA</h2>
-<p class="note" id="chain-help">Los nodos se muestran como verificados únicamente después de una certificación exitosa.</p>
-<div id="cert-n" class="file-caption" style="overflow-wrap:anywhere"></div>
-<div class="audit-kpis" id="chain-kpis">
-</div>
-<div class="node-list" id="chain-nodes">
-<p class="note">Sin cadena verificada.</p>
-</div>
+<h2 data-i18n="chainTitle"></h2>
+<p class="note" data-i18n="chainHelp"></p>
+<div id="chain-box"></div>
 </div>
 </section>
 <section id="view-about" class="hidden">
-<div class="panel">
+<div class="panel arch">
 <div class="emb emb-lg" id="emb-about" role="img"></div>
-<p class="note" id="emb-legend"></p>
-<h2>SPARTACO / OM337</h2>
-<p id="about-text">Auditor público independiente. Verifica evidencia matemática sin revelar ni ejecutar el motor privado de descubrimiento.</p>
-<div class="ui3-grid">
-<div class="ui3-card">
-<h3>FACTOR · MÓDULO · RESTO</h3>
-<p class="note" id="about-1">Divisibilidad exacta para demostrar composición.</p>
-</div>
-<div class="ui3-card">
-<h3>PINZA · TD · TANA</h3>
-<p class="note" id="about-2">Consulta auxiliar, identidad algebraica y certificación determinista de primalidad.</p>
-</div>
-</div>
-<p class="note">AUDITOR_DESCARTE v0.9.1 · VPSI-CONTRACT-1.0 · © 2026 Ilver Villasmil · Uso y redistribución sujetos a licencia.</p>
+<div id="about-box"></div>
 </div>
 </section>
 </main>
 </div>
+<div class="toast" id="toast"></div>
 <script>
-let lang='es', certText=null, certData=null, busy=false, lastResult=null, lastChannel=null;
+let lang='es';
 const $=id=>document.getElementById(id);
-const channels=['FACTOR','MODULO','PINZA','TD','RESTO','TANA'];
 const dict={
- es:{subtitle:'Auditor matemático independiente · Sin conexión · Sin motor privado',auditTab:'AUDITORÍA',chainTab:'CADENA TANA',aboutTab:'ARQUITECTURA',num:'01 / Número entero',numHelp:'Introduce N y aporta evidencia. Cada botón ejecuta una vía real del auditor.',extra:'Evidencias opcionales',cert:'02 / Certificado JSON',certHelp:'Elige uno de los certificados del repositorio o abre un JSON local.',result:'03 / Dictamen matemático',chain:'Cadena de certificación TANA',chainHelp:'Los nodos se muestran como verificados únicamente después de una certificación exitosa.',audit:'AUDITAR N',verify:'VERIFICAR CERTIFICADO',clear:'LIMPIAR',none:'Ningún archivo seleccionado',wait:'EN ESPERA',example:'EJEMPLO LOCAL',repo:'CARGAR DEL REPOSITORIO',repoLabel:'CERTIFICADOS DEL REPOSITORIO',busy:'VERIFICANDO…',invalid:'ERROR',nochain:'Sin cadena verificada',bits:'bits',nodes:'nodos',ready:'CERTIFICADO',bad:'COMPUESTO',review:'REVISAR',channel:'Vía seleccionada',about:'Auditor público independiente. La interfaz solo invoca el motor matemático.',sideNote:'DETERMINISTA · 6 VÍAS',embLegend:'Anillo exterior: los 4 veredictos del auditor. Anillo medio: las 6 vías de evidencia. Anillo interior: los 3 tipos de nodo TANA. Centro: el entero N.',embLabel:'Emblema del auditor SPARTACO / OM337',lblMod:'MÓDULOS (separados por coma)',lblRes:'RESTOS / DIVISORES (separados por coma)',certNote:'El ejemplo local es un certificado pequeño de prueba. El certificado gigante se puede cargar desde disco.',about1:'Divisibilidad exacta para demostrar composición.',about2:'Consulta auxiliar, identidad algebraica y certificación determinista de primalidad.',evid:'EVIDENCIA',labels:['FACTOR','MÓDULO','PINZA','TD','RESTO','TANA'],descs:['Comprueba un divisor no trivial exacto','Comprueba divisibilidad por módulos suministrados','Consulta auxiliar del motor; puede no estar disponible','Comprueba la identidad N = 2p + d','Comprueba divisibilidad por residuos suministrados','Verifica un certificado determinista JSON']},
- en:{subtitle:'Independent mathematical auditor · Offline · No private engine',auditTab:'AUDIT',chainTab:'TANA CHAIN',aboutTab:'ARCHITECTURE',num:'01 / Integer input',numHelp:'Enter N and evidence. Each button runs an actual auditor channel.',extra:'Optional evidence',cert:'02 / JSON certificate',certHelp:'Choose a repository certificate or open a local JSON file.',result:'03 / Mathematical verdict',chain:'TANA certification chain',chainHelp:'Nodes are marked verified only after successful certification.',audit:'AUDIT N',verify:'VERIFY CERTIFICATE',clear:'CLEAR',none:'No file selected',wait:'READY',example:'LOCAL EXAMPLE',repo:'LOAD FROM REPOSITORY',repoLabel:'REPOSITORY CERTIFICATES',busy:'VERIFYING…',invalid:'ERROR',nochain:'No verified chain',bits:'bits',nodes:'nodes',ready:'CERTIFIED',bad:'COMPOSITE',review:'REVIEW',channel:'Selected channel',about:'Independent public auditor. The interface only invokes the mathematical engine.',sideNote:'DETERMINISTIC · 6 CHANNELS',embLegend:'Outer ring: the auditor\'s 4 verdicts. Middle ring: the 6 evidence channels. Inner ring: the 3 TANA node types. Center: the integer N.',embLabel:'SPARTACO / OM337 auditor emblem',lblMod:'MODULI (comma-separated)',lblRes:'REMAINDERS / DIVISORS (comma-separated)',certNote:'The local example is a small test certificate. Large certificates can be loaded from disk.',about1:'Exact divisibility to prove compositeness.',about2:'Auxiliary consultation, algebraic identity and deterministic primality certification.',evid:'EVIDENCE',labels:['FACTOR','MODULO','PINZA','TD','REMAINDER','TANA'],descs:['Check an exact nontrivial divisor','Check divisibility by supplied moduli','Auxiliary engine consultation; may be unavailable','Check the identity N = 2p + d','Check divisibility by supplied remainders','Verify a deterministic JSON certificate']}
+es:{
+subtitle:'Auditor matemático independiente · Sin conexión · Sin motor privado',
+statusbar:'VERIFICADOR MATEMÁTICO INDEPENDIENTE',
+sideNote:'DETERMINISTA · 5 VÍAS ACTIVAS',
+auditTab:'AUDITORÍA',chainTab:'CADENA TANA',aboutTab:'ARQUITECTURA',
+p1Title:'01 / Número entero',
+p1Help:'Escribe o pega cualquier entero N (de cualquier tamaño). Se ignoran espacios y saltos de línea.',
+lblN:'N · ENTERO',phN:'Ej.: 97  ·  2305843009213693951',
+btnManual:'VERIFICAR N (HERRAMIENTAS PÚBLICAS)',btnClear:'LIMPIAR',
+chanTitle:'Vías de evidencia',chanHelp:'Elige una vía, completa su dato y ejecútala sobre N.',
+pinzaBadge:'PINZA · Motor privado (no incluido en el verificador público)',
+runChan:'EJECUTAR VÍA {c}',
+stepTitle:'Verificación manual de teorema',stepHelp:'Comprueba N con un paso de Pocklington, Multi-Pocklington o Lucas (T–B2) usando las mismas funciones del verificador.',
+btnStep:'VERIFICAR PASO',btnStepEx:'CARGAR EJEMPLO',
+p2Title:'02 / Certificado JSON',
+p2Help:'Desde dentro (repositorio) o desde fuera (archivo, arrastrar y soltar o pegar). Al cargar se inspecciona y se verifica.',
+lblRepo:'CERTIFICADOS DEL REPOSITORIO',optChoose:'— elige un certificado —',
+btnRepo:'CARGAR DEL REPOSITORIO',btnExample71:'EJEMPLO LOCAL (N = 71)',
+lblFile:'ARCHIVO LOCAL · .JSON',dropHint:'…o arrastra y suelta aquí un archivo .json',
+lblPaste:'PEGAR JSON',phPaste:'{"N": "71", "bits_N": 7, "arbol": [ … ]}',btnPaste:'USAR JSON PEGADO',
+btnVerifyCert:'VERIFICAR CERTIFICADO',btnViewChain:'VER CADENA TANA',
+p3Title:'03 / Dictamen matemático',
+chainTitle:'Cadena de certificación TANA',
+chainHelp:'Cada nodo muestra su entero, bits, dígitos y SHA-256, con verificación individual.',
+noCert:'Sin certificado cargado. Cárgalo en el panel 02.',
+resultEmpty:'El resultado aparecerá aquí.',
+wait:'EN ESPERA',busy:'VERIFICANDO…',done:'LISTO',
+showFull:'Ver número completo ({d} dígitos)',collapse:'Contraer',copy:'Copiar',copyHash:'Copiar hash',copied:'Copiado',
+bits:'bits',digits:'dígitos',nodes:'nodos',ms:'ms',seconds:'s',
+shaN:'SHA-256(N)',shaJson:'SHA-256(JSON)',shaTree:'SHA-256(árbol)',shaNode:'SHA-256(n)',
+matchDecl:'coincide con el declarado',noMatchDecl:'NO coincide con el declarado',noDecl:'sin valor declarado',
+invalidN:'N debe ser un entero decimal exacto: solo dígitos 0–9 con signo opcional (sin decimales, letras ni notación científica).',
+identPending:'calculando…',
+mathVerdict:'Veredicto matemático',metaStatus:'Estado de metadatos',
+title:'Título',issuer:'Emisor',file:'Archivo',format:'Formato / esquema',version:'Versión',date:'Fecha',engine:'Motor declarado',mechanism:'Mecanismo',
+algoN:'Algoritmo SHA-256(N)',bitsDecl:'bits_N declarado',declVerdict:'Veredicto declarado (ignorado como prueba)',uis:'Identidad UIS N = 2p + d',
+time:'Tiempo',nodeTypes:'Tipos de nodo',numNodes:'Nodos',
+rawJson:'JSON original (ver)',metaNotes:'Comprobaciones de metadatos',
+reason:'Motivo',
+notReached:'no alcanzado',pending:'pendiente',verified:'VERIFICADO',rejected:'RECHAZADO',
+verifyNode:'VERIFICAR ESTE NODO',auditNodeN:'AUDITAR ESTE N',hideNode:'OCULTAR',verifyingNode:'VERIFICANDO NODO…',
+nodeMath:'Ecuaciones del teorema',nodeDep:'Dependencia de ancestros',ok:'válido',fail:'no válido',
+checks:'Comprobaciones',formula:'Fórmula',detail:'Detalle',
+params:'Parámetros',theorem:'Teorema',rule:'Regla',
+method:'Método',divisor:'Divisor exacto',quotient:'Cociente',witness:'Testigo de composición',premises:'Premisas (ancestros)',
+chanResult:'Vía',certFor:'Certificado',
+loadCertFirst:'Carga primero un certificado en el panel 02 (repositorio, archivo, pegado o ejemplo).',
+tanaCertReady:'Se verificará N contra el certificado cargado: {name} ({bits} bits).',
+useCertN:'USAR EL N DEL CERTIFICADO',
+fFactor:'FACTOR (divisor candidato)',fMod:'MÓDULOS (separados por coma)',fP:'p (N = 2p + d)',fD:'d (N = 2p + d)',fRes:'RESTOS / DIVISORES (separados por coma)',
+sP:'p (ancestro primo)',sU:'u (opcional: se calcula)',sA:'a (base; por defecto 2)',sFac:'FACTORES q:a (separados por coma)',sPP:'P (parámetro de Lucas)',sQ:'Q (por defecto 1)',
+loaded:'Cargado',inspecting:'Inspeccionando…',elapsed:'transcurrido',
+errBridge:'Puente Python no disponible. Inicia la app con: python rum.py',
+errJson:'El texto no es un JSON válido',
+chanNames:{FACTOR:'FACTOR',MODULO:'MÓDULO',TD:'TD',RESTO:'RESTO',TANA:'TANA'},
+chanDescs:{FACTOR:'Comprueba un divisor no trivial exacto de N',MODULO:'Comprueba N ≡ 0 (mod m) para los módulos dados',PINZA:'Motor privado OM337: no incluido en el verificador público',TD:'Comprueba la identidad exacta N = 2p + d',RESTO:'Comprueba divisibilidad por los restos/divisores dados',TANA:'Verifica que el certificado cargado prueba ESTE N'},
+stepNames:{pock:'Pocklington',multi_pock:'Multi-Pocklington',lucas:'Lucas (T–B2)'},
+typeNames:{pinza:'Pinza (división exacta)',pock:'Pocklington',multi_pock:'Multi-Pocklington (T–MA1)',lucas:'Lucas (T–B2)'},
+rules:{},
+paramNames:{F:'F (ancestro primo p)',u:'u (multiplicador)',a:'a (base testigo)',P:'P (parámetro de Lucas)',Q:'Q',D:'D = P² − 4Q',ancestros:'Ancestros (q, a)',F_producto:'F = ∏ qᵢ',raiz_entera:'⌊√n⌋',q:'q',p:'p',d:'d'},
+methods:{DEFINICION:'Definición',FDP:'Filtro FDP B1 (3, 2, 7, 5)',DIVISION_EXACTA:'División exacta',MILLER_RABIN_DETERMINISTA_64:'Miller–Rabin determinista (N < 2^64, Sinclair 2011)',TESTIGO_MILLER_RABIN:'Testigo de Miller–Rabin',SIN_TESTIGO:'Búsqueda de testigos (bases 2…37)'},
+est:{PRIMO_POR_DESCARTE:'PRIMO POR DESCARTE',PRIMO_CERTIFICADO:'PRIMO CERTIFICADO',PRIMO_DETERMINISTA:'PRIMO (DETERMINISTA)',COMPUESTO_VERIFICADO:'COMPUESTO VERIFICADO',EVIDENCIA_INSUFICIENTE:'EVIDENCIA INSUFICIENTE',CONTRADICCION_DETECTADA:'CONTRADICCIÓN DETECTADA',NO_PRIMO:'NO PRIMO',CERTIFICADO_INVALIDO:'CERTIFICADO INVÁLIDO',PASO_RECHAZADO:'PASO RECHAZADO',PASO_VALIDO_PREMISA_EXTERNA:'PASO VÁLIDO · PREMISA EXTERNA',ENTRADA_INVALIDA:'ENTRADA INVÁLIDA',COHERENTES:'METADATOS COHERENTES',INCOHERENTES:'METADATOS INCOHERENTES',SIN_METADATOS:'SIN METADATOS',EN_CURSO:'VERIFICANDO…',ERROR:'ERROR'},
+embLabel:'Emblema del auditor SPARTACO / OM337',
+embLegend:'Anillo exterior: los 4 veredictos del auditor. Anillo medio: las 6 vías de evidencia (PINZA: motor privado, no incluida). Anillo interior: los 4 tipos de nodo TANA. Centro: el entero N.',
+arch:[
+['Alcance',['Verificador público e independiente: comprueba la primalidad de un entero con sus propias herramientas matemáticas públicas.','No es un certificador OM337: no genera primos, no ejecuta ni contiene el motor privado y no acepta una declaración como prueba.','Todo es aritmética entera exacta y determinista, sin conexión.']],
+['Invariantes',['El entero N es la única fuente de verdad: bits, dígitos y SHA-256(N) se recalculan siempre desde N.','Dos veredictos separados: el veredicto matemático y el estado de metadatos. Unos metadatos incorrectos no invalidan una prueba válida; una etiqueta falsa nunca certifica.','Dos hashes separados: SHA-256(N) (ASCII decimal, SHA256-ASCII-DECIMAL-v1) y SHA-256 del archivo JSON.','Sin límite de bits ni de tiempo al verificar certificados; solo las hojas pinza tienen una cota determinista de 48 bits.','Entrada estricta: N y los parámetros solo admiten enteros exactos (se rechazan decimales, booleanos y notación científica).']],
+['Tipos de nodo TANA',['pinza — TEO-5: división exacta hasta ⌊√n⌋ (hojas ≤ 48 bits).','pock — TEO-9 Pocklington: T3-1 n impar; T3-2 F certificado antes; T3-3 n − 1 = u·F; T3-4 F² > n o (2F + 1)² > n; T3-5 a^(n−1) ≡ 1; T3-6 gcd(a^u − 1, n) = 1.','multi_pock — TEO-12 T–MA1: qᵢ distintos certificados antes, qᵢ | n − 1, Fermat y orden por ancestro, (∏qᵢ + 1)² > n.','lucas — TEO-16 T–B2 (y TEO-18): n + 1 = u·F, (D/n) = −1, gcd(n, 2PQD) = 1, gcd(U_u, n) = 1, U_(n+1) ≡ 0 (mod n), (2F − 1)² > n.','Cada nodo se verifica por separado: ecuaciones del teorema y dependencia de ancestros se informan por separado.']],
+['Herramientas para N escrito a mano',['Filtro FDP B1 (3, 2, 7, 5) y división exacta hasta min(⌊√N⌋, 100 000).','N < 2^64: Miller–Rabin determinista con las 7 bases de Sinclair (2011): prueba completa.','N ≥ 2^64: búsqueda de testigos de composición con bases 2…37. Sin testigo el resultado es EVIDENCIA INSUFICIENTE: nunca se declara primo sin certificado o paso manual.','Pasos manuales: Pocklington, Multi-Pocklington y Lucas (T–B2) con las mismas funciones de los nodos.']],
+['Vías de evidencia',['FACTOR — divisor no trivial exacto.','MÓDULO — congruencia N ≡ 0 (mod m).','TD — identidad algebraica N = 2p + d (no prueba primalidad).','RESTO — divisibilidad por restos suministrados.','TANA — certificado determinista que prueba exactamente ese N.','PINZA — motor privado OM337: no incluido en este verificador público.']],
+['Estados',['PRIMO POR DESCARTE / PRIMO CERTIFICADO — cadena TANA verificada.','PRIMO (DETERMINISTA) — prueba pública completa para N escrito a mano.','COMPUESTO VERIFICADO — divisor o testigo exacto.','EVIDENCIA INSUFICIENTE — la evidencia no basta.','CONTRADICCIÓN DETECTADA — una relación declarada es falsa.','PASO VÁLIDO · PREMISA EXTERNA — ecuaciones correctas; falta probar el ancestro.']]
+],
+archFoot:'AUDITOR_DESCARTE v0.9.3 · VPSI-CONTRACT-1.0 · © 2026 Ilver Villasmil · Uso y redistribución sujetos a licencia.'
+},
+en:{
+subtitle:'Independent mathematical auditor · Offline · No private engine',
+statusbar:'INDEPENDENT MATHEMATICAL VERIFIER',
+sideNote:'DETERMINISTIC · 5 ACTIVE CHANNELS',
+auditTab:'AUDIT',chainTab:'TANA CHAIN',aboutTab:'ARCHITECTURE',
+p1Title:'01 / Integer input',
+p1Help:'Type or paste any integer N (any size). Spaces and line breaks are ignored.',
+lblN:'N · INTEGER',phN:'E.g.: 97  ·  2305843009213693951',
+btnManual:'VERIFY N (PUBLIC TOOLS)',btnClear:'CLEAR',
+chanTitle:'Evidence channels',chanHelp:'Pick a channel, fill in its value and run it on N.',
+pinzaBadge:'PINZA · Private engine (not included in public verifier)',
+runChan:'RUN {c} CHANNEL',
+stepTitle:'Manual theorem step',stepHelp:'Check N with a Pocklington, Multi-Pocklington or Lucas (T–B2) step using the verifier\'s own functions.',
+btnStep:'VERIFY STEP',btnStepEx:'LOAD EXAMPLE',
+p2Title:'02 / JSON certificate',
+p2Help:'From inside (repository) or outside (file, drag and drop, or paste). Loading inspects and verifies it.',
+lblRepo:'REPOSITORY CERTIFICATES',optChoose:'— choose a certificate —',
+btnRepo:'LOAD FROM REPOSITORY',btnExample71:'LOCAL EXAMPLE (N = 71)',
+lblFile:'LOCAL FILE · .JSON',dropHint:'…or drag and drop a .json file here',
+lblPaste:'PASTE JSON',phPaste:'{"N": "71", "bits_N": 7, "arbol": [ … ]}',btnPaste:'USE PASTED JSON',
+btnVerifyCert:'VERIFY CERTIFICATE',btnViewChain:'VIEW TANA CHAIN',
+p3Title:'03 / Mathematical verdict',
+chainTitle:'TANA certification chain',
+chainHelp:'Every node shows its integer, bits, digits and SHA-256, with individual verification.',
+noCert:'No certificate loaded. Load one in panel 02.',
+resultEmpty:'The result will appear here.',
+wait:'READY',busy:'VERIFYING…',done:'DONE',
+showFull:'Show full number ({d} digits)',collapse:'Collapse',copy:'Copy',copyHash:'Copy hash',copied:'Copied',
+bits:'bits',digits:'digits',nodes:'nodes',ms:'ms',seconds:'s',
+shaN:'SHA-256(N)',shaJson:'SHA-256(JSON)',shaTree:'SHA-256(tree)',shaNode:'SHA-256(n)',
+matchDecl:'matches the declared value',noMatchDecl:'does NOT match the declared value',noDecl:'no declared value',
+invalidN:'N must be an exact decimal integer: digits 0–9 with optional sign only (no decimals, letters or scientific notation).',
+identPending:'computing…',
+mathVerdict:'Mathematical verdict',metaStatus:'Metadata status',
+title:'Title',issuer:'Issuer',file:'File',format:'Format / schema',version:'Version',date:'Date',engine:'Declared engine',mechanism:'Mechanism',
+algoN:'SHA-256(N) algorithm',bitsDecl:'Declared bits_N',declVerdict:'Declared verdict (ignored as proof)',uis:'UIS identity N = 2p + d',
+time:'Time',nodeTypes:'Node types',numNodes:'Nodes',
+rawJson:'Original JSON (view)',metaNotes:'Metadata checks',
+reason:'Reason',
+notReached:'not reached',pending:'pending',verified:'VERIFIED',rejected:'REJECTED',
+verifyNode:'VERIFY THIS NODE',auditNodeN:'AUDIT THIS N',hideNode:'HIDE',verifyingNode:'VERIFYING NODE…',
+nodeMath:'Theorem equations',nodeDep:'Ancestor dependency',ok:'valid',fail:'not valid',
+checks:'Checks',formula:'Formula',detail:'Detail',
+params:'Parameters',theorem:'Theorem',rule:'Rule',
+method:'Method',divisor:'Exact divisor',quotient:'Quotient',witness:'Compositeness witness',premises:'Premises (ancestors)',
+chanResult:'Channel',certFor:'Certificate',
+loadCertFirst:'First load a certificate in panel 02 (repository, file, paste or example).',
+tanaCertReady:'N will be checked against the loaded certificate: {name} ({bits} bits).',
+useCertN:'USE THE CERTIFICATE\'S N',
+fFactor:'FACTOR (candidate divisor)',fMod:'MODULI (comma-separated)',fP:'p (N = 2p + d)',fD:'d (N = 2p + d)',fRes:'REMAINDERS / DIVISORS (comma-separated)',
+sP:'p (prime ancestor)',sU:'u (optional: computed)',sA:'a (base; default 2)',sFac:'FACTORS q:a (comma-separated)',sPP:'P (Lucas parameter)',sQ:'Q (default 1)',
+loaded:'Loaded',inspecting:'Inspecting…',elapsed:'elapsed',
+errBridge:'Python bridge unavailable. Start the app with: python rum.py',
+errJson:'The text is not valid JSON',
+chanNames:{FACTOR:'FACTOR',MODULO:'MODULO',TD:'TD',RESTO:'REMAINDER',TANA:'TANA'},
+chanDescs:{FACTOR:'Checks an exact nontrivial divisor of N',MODULO:'Checks N ≡ 0 (mod m) for the given moduli',PINZA:'Private OM337 engine: not included in the public verifier',TD:'Checks the exact identity N = 2p + d',RESTO:'Checks divisibility by the given remainders/divisors',TANA:'Verifies that the loaded certificate proves THIS N'},
+stepNames:{pock:'Pocklington',multi_pock:'Multi-Pocklington',lucas:'Lucas (T–B2)'},
+typeNames:{pinza:'Clamp (exact trial division)',pock:'Pocklington',multi_pock:'Multi-Pocklington (T–MA1)',lucas:'Lucas (T–B2)'},
+rules:{'hoja (cierre de la Pinza)':'leaf (Clamp closure)','escalera T-C1(+)':'T-C1(+) ladder'},
+paramNames:{F:'F (prime ancestor p)',u:'u (multiplier)',a:'a (witness base)',P:'P (Lucas parameter)',Q:'Q',D:'D = P² − 4Q',ancestros:'Ancestors (q, a)',F_producto:'F = ∏ qᵢ',raiz_entera:'⌊√n⌋',q:'q',p:'p',d:'d'},
+methods:{DEFINICION:'Definition',FDP:'FDP B1 filter (3, 2, 7, 5)',DIVISION_EXACTA:'Exact trial division',MILLER_RABIN_DETERMINISTA_64:'Deterministic Miller–Rabin (N < 2^64, Sinclair 2011)',TESTIGO_MILLER_RABIN:'Miller–Rabin witness',SIN_TESTIGO:'Witness search (bases 2…37)'},
+est:{PRIMO_POR_DESCARTE:'PRIME BY ELIMINATION',PRIMO_CERTIFICADO:'CERTIFIED PRIME',PRIMO_DETERMINISTA:'PRIME (DETERMINISTIC)',COMPUESTO_VERIFICADO:'VERIFIED COMPOSITE',EVIDENCIA_INSUFICIENTE:'INSUFFICIENT EVIDENCE',CONTRADICCION_DETECTADA:'CONTRADICTION DETECTED',NO_PRIMO:'NOT PRIME',CERTIFICADO_INVALIDO:'INVALID CERTIFICATE',PASO_RECHAZADO:'STEP REJECTED',PASO_VALIDO_PREMISA_EXTERNA:'VALID STEP · EXTERNAL PREMISE',ENTRADA_INVALIDA:'INVALID INPUT',COHERENTES:'CONSISTENT METADATA',INCOHERENTES:'INCONSISTENT METADATA',SIN_METADATOS:'NO METADATA',EN_CURSO:'VERIFYING…',ERROR:'ERROR'},
+embLabel:'SPARTACO / OM337 auditor emblem',
+embLegend:'Outer ring: the auditor\'s 4 verdicts. Middle ring: the 6 evidence channels (PINZA: private engine, not included). Inner ring: the 4 TANA node types. Center: the integer N.',
+arch:[
+['Scope',['Independent public verifier: it checks the primality of an integer with its own public mathematical tools.','It is not an OM337 certifier: it does not generate primes, does not run or contain the private engine, and never accepts a declaration as proof.','Everything is exact, deterministic integer arithmetic, offline.']],
+['Invariants',['The integer N is the single source of truth: bits, digits and SHA-256(N) are always recomputed from N.','Two separate verdicts: the mathematical verdict and the metadata status. Wrong metadata never invalidates a valid proof; a forged label never certifies.','Two separate hashes: SHA-256(N) (ASCII decimal, SHA256-ASCII-DECIMAL-v1) and SHA-256 of the JSON file.','No bit-size or time limit when verifying certificates; only pinza leaves have a deterministic 48-bit bound.','Strict input: N and parameters accept exact integers only (decimals, booleans and scientific notation are rejected).']],
+['TANA node types',['pinza — TEO-5: exact trial division up to ⌊√n⌋ (leaves ≤ 48 bits).','pock — TEO-9 Pocklington: T3-1 n odd; T3-2 F certified earlier; T3-3 n − 1 = u·F; T3-4 F² > n or (2F + 1)² > n; T3-5 a^(n−1) ≡ 1; T3-6 gcd(a^u − 1, n) = 1.','multi_pock — TEO-12 T–MA1: distinct qᵢ certified earlier, qᵢ | n − 1, Fermat and order per ancestor, (∏qᵢ + 1)² > n.','lucas — TEO-16 T–B2 (and TEO-18): n + 1 = u·F, (D/n) = −1, gcd(n, 2PQD) = 1, gcd(U_u, n) = 1, U_(n+1) ≡ 0 (mod n), (2F − 1)² > n.','Each node is verified on its own: theorem equations and ancestor dependency are reported separately.']],
+['Tools for a hand-typed N',['FDP B1 filter (3, 2, 7, 5) and exact trial division up to min(⌊√N⌋, 100,000).','N < 2^64: deterministic Miller–Rabin with Sinclair\'s 7 bases (2011): a complete proof.','N ≥ 2^64: search for compositeness witnesses with bases 2…37. With no witness the result is INSUFFICIENT EVIDENCE: primality is never claimed without a certificate or a manual step.','Manual steps: Pocklington, Multi-Pocklington and Lucas (T–B2) with the same functions used for nodes.']],
+['Evidence channels',['FACTOR — exact nontrivial divisor.','MODULO — congruence N ≡ 0 (mod m).','TD — algebraic identity N = 2p + d (does not prove primality).','REMAINDER — divisibility by supplied remainders.','TANA — deterministic certificate that proves exactly that N.','PINZA — private OM337 engine: not included in this public verifier.']],
+['States',['PRIME BY ELIMINATION / CERTIFIED PRIME — TANA chain verified.','PRIME (DETERMINISTIC) — complete public proof for a hand-typed N.','VERIFIED COMPOSITE — exact divisor or witness.','INSUFFICIENT EVIDENCE — the evidence is not enough.','CONTRADICTION DETECTED — a declared relation is false.','VALID STEP · EXTERNAL PREMISE — equations hold; the ancestor still needs a proof.']]
+],
+archFoot:'AUDITOR_DESCARTE v0.9.3 · VPSI-CONTRACT-1.0 · © 2026 Ilver Villasmil · Use and redistribution subject to license.'
+}
 };
 
 /* Emblema: anillos de lingotes. Cada pieza sale de un dato real del auditor. */
@@ -476,39 +655,181 @@ function buildEmblem(uid,chips){
  const ring=(pairs,R)=>chips?'<div class="emb-chips">'+pairs.map((p,i)=>{const a=i*2*Math.PI/pairs.length;return `<div class="emb-chip" style="left:${(50+R*Math.sin(a)).toFixed(2)}%;top:${(50-R*Math.cos(a)).toFixed(2)}%"><span class="lang es">${p[0]}</span><span class="lang en">${p[1]}</span></div>`;}).join('')+'</div>':'';
  const verdicts=[['CV','CV'],['PD','PD'],['EI','EI'],['CD','CD']];
  const vias=[['FA','FA'],['MO','MO'],['PZ','PZ'],['TD','TD'],['RE','RM'],['TA','TA']];
- const nodes=[['PZ','PZ'],['PK','PK'],['MP','MP']];
+ const nodes=[['PZ','PZ'],['PK','PK'],['MP','MP'],['LU','LU']];
  const defs=`<defs><linearGradient id="embMetA${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4fa"/><stop offset=".4" stop-color="#93a7bd"/><stop offset=".72" stop-color="#3b4f66"/><stop offset="1" stop-color="#22d3ee"/></linearGradient><linearGradient id="embMetB${uid}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#6f8399"/><stop offset="1" stop-color="#dbe6f0"/></linearGradient><linearGradient id="embAzul${uid}" gradientUnits="userSpaceOnUse" x1="-80" y1="-80" x2="80" y2="80"><stop offset="0" stop-color="#2a6cb8"/><stop offset=".45" stop-color="#123a6b"/><stop offset=".75" stop-color="#1d5aa0"/><stop offset="1" stop-color="#0a1f3a"/></linearGradient><linearGradient id="embPlata${uid}" gradientUnits="userSpaceOnUse" x1="-70" y1="-90" x2="70" y2="90"><stop offset="0" stop-color="#f4f8fc"/><stop offset=".3" stop-color="#b9c7d6"/><stop offset=".55" stop-color="#7d93ad"/><stop offset=".8" stop-color="#d3dfeb"/><stop offset="1" stop-color="#8aa2bd"/></linearGradient></defs>`;
  const core=chips?'<div class="emb-ley"><small>AUDITOR</small>N<span>&#10003;</span></div>':'<div class="emb-ley">N</div>';
  return `<div class="emb-ring ea"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${defs}<circle r="97" fill="none" stroke="#050d15" stroke-width="2.6" opacity=".9" transform="translate(0 2.2)"/><circle r="97" fill="none" stroke="url(#embMetA${uid})" stroke-width="1.8"/><circle r="93.8" fill="none" stroke="rgba(34,211,238,.3)" stroke-width=".6" stroke-dasharray="1 6"/></svg>${ring(verdicts,48.25)}</div></div>`
  +`<div class="emb-ring eb"><div class="emb-rotor"><svg viewBox="-100 -100 200 200"><circle r="80" fill="none" stroke="#050d15" stroke-width="2.2" opacity=".9" transform="translate(0 1.8)"/><circle r="80" fill="none" stroke="url(#embMetB${uid})" stroke-width="1.3"/><circle r="76.4" fill="none" stroke="rgba(34,211,238,.35)" stroke-width=".7"/></svg></div></div>`
  +`<div class="emb-ring ec"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${ingots(6,52,70,2.6)}</svg>${ring(vias,30.5)}</div></div>`
- +`<div class="emb-ring ed"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${ingots(3,35,50,4.5)}</svg>${ring(nodes,21.25)}</div></div>`
+ +`<div class="emb-ring ed"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${ingots(4,35,50,4.5)}</svg>${ring(nodes,21.25)}</div></div>`
  +`<div class="emb-ring ee"><div class="emb-rotor"><svg viewBox="-100 -100 200 200">${ingots(6,21,32,6.5)}</svg></div></div>`
  +`<div class="emb-core"><div class="emb-disc">${core}</div></div>`;
 }
 function initEmblems(){$('emb-brand').innerHTML=buildEmblem('b',false);$('emb-about').innerHTML=buildEmblem('a',true);}
+const CHANNELS=['FACTOR','MODULO','TD','RESTO','TANA'];
+const FLOW=['FACTOR','MODULO','PINZA','TD','RESTO','TANA'];
+const STEPS=['pock','multi_pock','lucas'];
+const CHAN_FIELDS={FACTOR:[['f-factor','fFactor','7']],MODULO:[['f-modulos','fMod','3, 13']],TD:[['f-p','fP','11'],['f-d','fD','1']],RESTO:[['f-residuos','fRes','7, 11']],TANA:[]};
+const STEP_FIELDS={pock:[['s-p','sP','11',true],['s-u','sU','2',false],['s-a','sA','5',false]],multi_pock:[['s-factores','sFac','5:2, 7:2',true]],lucas:[['s-p','sP','7',true],['s-u','sU','2',false],['s-PP','sPP','3',true],['s-Q','sQ','1',false]]};
+const STEP_EXAMPLES={pock:{n:'23','s-p':'11','s-u':'','s-a':'5'},multi_pock:{n:'71','s-factores':'5:2, 7:2'},lucas:{n:'13','s-p':'7','s-u':'','s-PP':'3','s-Q':''}};
+const S={chan:'FACTOR',step:'pock',vals:{},ident:null,identReq:0,last:null,busy:{},certText:null,certName:null,certToken:0,inspect:null,verif:null,certBusy:false,certStart:0,nodeRes:{},repoList:[]};
+const NUMS={},EXP=new Set();
+function t(k){const v=dict[lang][k];return v===undefined?k:v;}
+function fmt(k,o){let s=t(k);for(const [a,b] of Object.entries(o||{}))s=s.split('{'+a+'}').join(b);return s;}
 function safe(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function L(o,base){if(!o)return '';return lang==='es'?(o[base+'_es']??o[base]??''):(o[base+'_en']??o[base]??o[base+'_es']??'');}
+function est(e){return (dict[lang].est||{})[e]||e||'';}
+function estCls(e){if(['PRIMO_POR_DESCARTE','PRIMO_CERTIFICADO','PRIMO_DETERMINISTA','COHERENTES'].includes(e))return 'pill-ok';if(['COMPUESTO_VERIFICADO','NO_PRIMO','CERTIFICADO_INVALIDO','PASO_RECHAZADO','CONTRADICCION_DETECTADA','INCOHERENTES','ENTRADA_INVALIDA','ERROR'].includes(e))return 'pill-bad';return 'pill-warn';}
+function pill(e,txt){return `<span class="pill ${estCls(e)}">${safe(txt||est(e))}</span>`;}
+function cleanN(v){return String(v||'').replace(/\s+/g,'');}
+function isInt(v){return /^[+-]?[0-9]+$/.test(cleanN(v));}
+function msTxt(ms){if(ms==null)return '';return ms>=1000?(ms/1000).toFixed(3)+' '+t('seconds'):Number(ms).toFixed(1)+' '+t('ms');}
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),1300);}
+async function copyText(s){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(s);}else throw 0;}catch(_){const ta=document.createElement('textarea');ta.value=s;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();}toast(t('copied'));}
+function copyNum(k){copyText(NUMS[k]||'');}
+function copyHashKey(k){copyText(NUMS['h:'+k]||'');}
+/* Number viewer: first digits + "..." + expand / collapse + copy + bits, digits, SHA-256 */
+function numView(key,str,meta={}){
+ str=String(str??'');NUMS[key]=str;if(meta.sha)NUMS['h:'+key]=meta.sha;
+ const digits=meta.digits??str.replace(/^[+-]/,'').length;const open=EXP.has(key);const long=str.length>60;
+ const prev=long?str.slice(0,48)+'...':str;
+ let shaLine='';if(meta.sha){let m='';if(meta.shaOk===true)m=` <span class="okc">✓ ${safe(t('matchDecl'))}</span>`;else if(meta.shaOk===false)m=` <span class="koc">✗ ${safe(t('noMatchDecl'))}</span>`;else if(meta.shaOk===null&&meta.showDecl)m=` <span class="ui3-muted">(${safe(t('noDecl'))})</span>`;
+  shaLine=`<div class="num-meta"><b>${safe(meta.shaLabel||t('shaN'))}</b><span class="hash">${safe(meta.sha)}</span>${m}<button class="btn secondary mini" onclick="copyHashKey('${key}')">${safe(t('copyHash'))}</button></div>`;}
+ return `<div class="numbox" data-numkey="${key}">${meta.label?`<div class="lbl">${safe(meta.label)}</div>`:''}`
+ +(open?'':`<div class="num-prev">${safe(prev)}</div>`)
+ +(open?`<div class="num-full">${safe(str)}</div>`:'')
+ +`<div class="num-meta">${meta.bits!=null?`<span><b>${safe(meta.bits)}</b> ${safe(t('bits'))}</span>`:''}<span><b>${safe(digits)}</b> ${safe(t('digits'))}</span>`
+ +(long?`<button class="btn secondary mini" onclick="toggleNum('${key}')">${safe(open?t('collapse'):fmt('showFull',{d:digits}))}</button>`:'')
+ +`<button class="btn secondary mini" onclick="copyNum('${key}')">${safe(t('copy'))}</button></div>${shaLine}</div>`;
+}
+const NUMMETA={};
+function nv(key,str,meta){NUMMETA[key]=[str,meta];return numView(key,str,meta);}
+function toggleNum(key){if(EXP.has(key))EXP.delete(key);else EXP.add(key);const m=NUMMETA[key];if(!m)return;document.querySelectorAll(`[data-numkey="${key}"]`).forEach(el=>{el.outerHTML=numView(key,m[0],m[1]);});}
+function checksTable(list){if(!Array.isArray(list)||!list.length)return '';return `<table class="chk"><tr><th></th><th>ID</th><th>${safe(t('formula'))}</th><th>${safe(t('detail'))}</th></tr>`+list.map(c=>`<tr><td class="${c.ok?'okc':'koc'}">${c.ok?'✓':'✗'}</td><td class="mono">${safe(c.id)}</td><td class="f">${safe(c.formula)}</td><td class="d">${safe(L(c,'detail'))}</td></tr>`).join('')+'</table>';}
+function paramsView(prefix,params){if(!params||typeof params!=='object')return '';const pn=dict[lang].paramNames;let h='';
+ for(const [k,v] of Object.entries(params)){if(k==='ancestros'&&Array.isArray(v)){h+=`<div class="lbl" style="font-size:11px;color:var(--muted);margin-top:6px">${safe(pn.ancestros)}</div>`;v.forEach((x,j)=>{h+=nv(`${prefix}-anc${j}`,x.q,{label:`q${j+1} · a${j+1} = ${x.a}`,bits:bitsOf(x.q)});});continue;}
+  if(v!==null&&typeof v==='object')continue;const s=String(v);const label=pn[k]||k;
+  if(/^[+-]?[0-9]+$/.test(s)&&s.length>24)h+=nv(`${prefix}-${k}`,s,{label,bits:bitsOf(s)});else h+=`<div class="kv" style="margin:3px 0"><div>${safe(label)}</div><div class="mono">${safe(s)}</div></div>`;}
+ return h;}
+function bitsOf(s){try{let x=BigInt(String(s));if(x<0n)x=-x;return x===0n?0:x.toString(2).length;}catch(e){return null;}}
+function typeName(x){return (dict[lang].typeNames||{})[x]||x||'?';}
+function ruleName(r){if(!r)return '';return (dict[lang].rules||{})[r]||r;}
+async function bridge(method,arg){const api=window.pywebview&&window.pywebview.api;if(!api||typeof api[method]!=='function')throw Error(t('errBridge'));return arg===undefined?await api[method]():await api[method](arg);}
 function showTab(v){for(const x of ['audit','chain','about']){$('view-'+x).classList.toggle('hidden',x!==v);$('tab-'+x).classList.toggle('active',x===v);}}
-function renderFlow(active=null,ok=false){$('flow').innerHTML=channels.map((c,i)=>`<div class="ui3-nodo ${active===c?'on':''} ${active===c&&!ok?'bad':''}"><span class="rid">0${i+1} / ${safe(dict[lang].evid)}</span><strong>${safe(dict[lang].labels[i])}</strong><span>${safe(dict[lang].descs[i])}</span></div>`).join('');}
-function setLang(v){lang=v;document.documentElement.lang=v;document.querySelectorAll('.emb').forEach(e=>{e.dataset.lang=v;});$('emb-about').setAttribute('aria-label',dict[v].embLabel);for(const l of ['es','en'])$('lang-'+l).classList.toggle('active',l===v);const t=dict[v];const ids={'subtitle':'subtitle','tab-audit':'auditTab','tab-chain':'chainTab','tab-about':'aboutTab','num-title':'num','num-help':'numHelp','extra-title':'extra','cert-title':'cert','cert-help':'certHelp','result-title':'result','chain-title':'chain','chain-help':'chainHelp','btn-audit':'audit','btn-cert':'verify','btn-clear':'clear','btn-example':'example','btn-repo':'repo','repo-label':'repoLabel','about-text':'about','side-note':'sideNote','lbl-modulos':'lblMod','lbl-residuos':'lblRes','cert-note':'certNote','about-1':'about1','about-2':'about2','emb-legend':'embLegend'};for(const [id,k] of Object.entries(ids))$(id).textContent=t[k];$('channel-buttons').innerHTML=channels.map((c,i)=>`<button class="btn secondary" id="via-${c}" onclick="runChannel('${c}')" title="${safe(t.descs[i])}">${safe(t.labels[i])}</button>`).join('');$('channel-help').textContent=t.descs[0];if(!busy)$('status-message').textContent=t.wait;if(!certText)$('file-info').textContent=t.none;renderFlow(lastChannel,!!lastResult&&lastResult.estado!=='ERROR');renderChain(lastChain);}
-function setBusy(v){busy=v;for(const id of ['btn-audit','btn-cert','btn-repo','btn-example'])$(id).disabled=v||(id==='btn-cert'&&!certText);for(const c of channels){const el=$('via-'+c);if(el)el.disabled=v;}$('status-message').textContent=v?dict[lang].busy:dict[lang].wait;}
-function evidenceHtml(list){if(!Array.isArray(list)||!list.length)return '';return '<div class="node-list">'+list.map(e=>`<div class="cap-row"><b class="mono">${safe(String(e.via||'').toUpperCase())}</b> · ${safe(e.afirmacion||'')}${e.concluyente?' ✓':''}<span class="note" style="display:block;overflow-wrap:anywhere">${safe([e.descarte,e.datos].filter(Boolean).join(' · '))}</span></div>`).join('')+'</div>';}
-function display(res){lastResult=res;const good=res.estado==='PRIMO_POR_DESCARTE',bad=res.estado==='COMPUESTO_VERIFICADO';const color=good?'ready':bad?'bad':'warn';const details=[res.justificacion||res.error||'',res.bits?`${res.bits} ${dict[lang].bits}`:'',res.nodos?`${res.nodos} ${dict[lang].nodes}`:''].filter(Boolean);$('result-box').innerHTML=`<div class="result-value ${color}">${safe(res.estado||'ERROR')}</div><p style="overflow-wrap:anywhere">${safe(details.join(' · '))}</p>${evidenceHtml(res.evidencias)}`;$('status-message').textContent=good?dict[lang].ready:bad?dict[lang].bad:dict[lang].review;renderFlow(lastChannel,good||bad);}
-let lastChain={};
-function renderChain(res){lastChain=res;const good=res.estado==='PRIMO_POR_DESCARTE';const details=good&&Array.isArray(res.detalles)?res.detalles:[];const nodes=certData&&Array.isArray(certData.arbol)?certData.arbol:[];$('cert-n').textContent=certData&&certData.N!=null?'N = '+String(certData.N):'';$('chain-kpis').innerHTML=good?`<div class="ui3-card"><div class="ui3-k">BITS</div><div class="ui3-v">${safe(res.bits)}</div></div><div class="ui3-card"><div class="ui3-k">${safe(dict[lang].nodes.toUpperCase())}</div><div class="ui3-v">${safe(res.nodos??details.length)}</div></div><div class="ui3-card"><div class="ui3-k">TANA</div><div class="ui3-v ready">VALID</div></div>`:'';$('chain-nodes').innerHTML=details.length?details.map((d,i)=>`<div class="node-line"><b>#${String(i+1).padStart(2,'0')}</b><strong>${safe(d.tipo||nodes[i]?.tipo||'NODE')}<span style="display:block;font-weight:400;overflow-wrap:anywhere">${nodes[i]?.n!=null?'N = '+safe(nodes[i].n):''}</span></strong><em>${safe(d.bits??'')} bits ✓</em></div>`).join(''):`<p class="note">${safe(dict[lang].nochain)}</p>`;}
-async function bridge(method,arg){if(!window.pywebview?.api?.[method])throw Error('Python bridge unavailable. Start the app with: python rum.py');return await window.pywebview.api[method](arg);}
-function payload(){return {n:$('n').value,factor:$('factor').value,modulos:$('modulos').value,p:$('p').value,d:$('d').value,residuos:$('residuos').value};}
-async function executeAudit(channel){if(busy)return;lastChannel=channel;setBusy(true);try{const r=await bridge('auditar_numero',{...payload(),channel});display(r);renderChain({});}catch(e){display({estado:'ERROR',error:String(e)});}finally{setBusy(false);}}
-async function runAudit(){return executeAudit(null);}
-async function runChannel(channel){if(channel==='TANA'){if(certText)await runCert();else $('file-info').textContent=dict[lang].certHelp;return;}const i=channels.indexOf(channel);$('channel-help').textContent=dict[lang].descs[i];return executeAudit(channel);}
-async function runCert(){if(busy||!certText)return;lastChannel='TANA';setBusy(true);try{const r=await bridge('verificar_json',certText);display(r);renderChain(r);if(r.estado==='PRIMO_POR_DESCARTE')showTab('chain');}catch(e){display({estado:'ERROR',error:String(e)});renderChain({});}finally{setBusy(false);}}
-function acceptCert(raw,name){certText=raw;try{certData=JSON.parse(raw);}catch(e){certData=null;certText=null;display({estado:'ERROR',error:String(e)});}$('file-info').textContent=name;$('btn-cert').disabled=!certText;renderChain({});}
-async function loadCert(ev){const f=ev.target.files?.[0];if(!f)return;acceptCert(await f.text(),f.name);}
-async function loadRepoCert(){const name=$('repo-certs').value;if(!name)return;try{const r=await bridge('cargar_certificado',name);acceptCert(r.contenido,r.nombre);}catch(e){display({estado:'ERROR',error:String(e)});}}
-function loadExample(){acceptCert(JSON.stringify({N:'71',bits_N:7,arbol:[{tipo:'pinza',n:'5'},{tipo:'pinza',n:'7'},{tipo:'multi_pock',n:'71',ancestros:[{q:'5',a:'2'},{q:'7',a:'2'}]}]}),'example_71.json');}
-function clearAll(){for(const id of ['n','factor','modulos','p','d','residuos','cert-file'])$(id).value='';certText=null;certData=null;lastChannel=null;lastResult=null;$('btn-cert').disabled=true;$('file-info').textContent=dict[lang].none;$('result-box').textContent='';renderChain({});renderFlow();$('status-message').textContent=dict[lang].wait;showTab('audit');}
-async function initRepo(){try{const r=await bridge('listar_certificados');const select=$('repo-certs');for(const name of r.certificados){const opt=document.createElement('option');opt.value=name;opt.textContent=name;select.appendChild(opt);}}catch(e){$('file-info').textContent=String(e);}}
-initEmblems();setLang('es');renderChain({});window.addEventListener('pywebviewready',initRepo);if(window.pywebview?.api)initRepo();
+/* ---------- static texts ---------- */
+function applyStatic(){document.documentElement.lang=lang;document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});document.querySelectorAll('.emb').forEach(e=>{e.dataset.lang=lang;});$('emb-about').setAttribute('aria-label',t('embLabel'));for(const l of ['es','en'])$('lang-'+l).classList.toggle('active',l===lang);}
+function setLang(v){lang=v;applyStatic();renderAll();}
+function renderAll(){renderFlow();renderIdent();renderChanSeg();renderStepSeg();renderCertStatus();renderResult();renderChain();renderAbout();updateButtons();}
+function renderFlow(){const active=S.last&&S.last.kind==='canal'?S.last.canal:(S.last&&S.last.kind==='cert'?'TANA':null);$('flow').innerHTML=FLOW.map((c,i)=>{const off=c==='PINZA';const name=off?'PINZA':(dict[lang].chanNames[c]);return `<div class="ui3-nodo ${off?'off':''} ${active===c?'on':''}"><span class="rid">0${i+1} / ${off?'—':(lang==='es'?'VÍA':'CHANNEL')}</span><strong>${safe(name)}</strong><span>${safe(dict[lang].chanDescs[c])}</span></div>`;}).join('');}
+function renderAbout(){$('emb-about').innerHTML||($('emb-about').innerHTML=buildEmblem('a',true));const a=dict[lang].arch;$('about-box').innerHTML=`<p class="note" style="text-align:center">${safe(t('embLegend'))}</p><h2>SPARTACO / OM337</h2>`+a.map(([h,items])=>`<h3>${safe(h)}</h3><ul>${items.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`).join('')+`<p class="note">${safe(t('archFoot'))}</p>`;}
+/* ---------- Panel 01: N ---------- */
+let identTimer=null;
+function onNInput(){clearTimeout(identTimer);const v=cleanN($('n').value);if(!v){S.ident=null;renderIdent();updateButtons();return;}if(!isInt(v)){S.ident={invalid:true};renderIdent();updateButtons();return;}S.ident={pending:true};renderIdent();updateButtons();identTimer=setTimeout(async()=>{const req=++S.identReq;try{const r=await bridge('identidad_numero',v);if(req===S.identReq){S.ident=r;renderIdent();updateButtons();}}catch(e){if(req===S.identReq){S.ident={error:String(e.message||e)};renderIdent();}}},220);}
+function renderIdent(){const b=$('n-ident');const r=S.ident;if(!r){b.innerHTML='';return;}if(r.invalid){b.innerHTML=`<p class="note koc">${safe(t('invalidN'))}</p>`;return;}if(r.pending){b.innerHTML=`<p class="note">${safe(t('identPending'))}</p>`;return;}if(r.error||r.estado==='ENTRADA_INVALIDA'){b.innerHTML=`<p class="note koc">${safe(r.error||L(r,'error'))}</p>`;return;}b.innerHTML=nv('in-N',r.N_str,{label:'N',bits:r.bits,digits:r.digitos,sha:r.sha256_N});}
+function nValid(){return !!(S.ident&&S.ident.N_str&&isInt($('n').value));}
+function field(id,labelKey,ph,req){const v=S.vals[id]??'';return `<label for="${id}">${safe(t(labelKey))}${req?' *':''}</label><input id="${id}" type="text" spellcheck="false" placeholder="${safe(ph)}" value="${safe(v)}" oninput="S.vals[this.id]=this.value;updateButtons()">`;}
+function renderChanSeg(){$('chan-seg').innerHTML=CHANNELS.map(c=>`<button class="${S.chan===c?'active':''}" onclick="selChan('${c}')" title="${safe(dict[lang].chanDescs[c])}">${safe(dict[lang].chanNames[c])}</button>`).join('');let h=`<p class="note">${safe(dict[lang].chanDescs[S.chan])}</p>`;
+ if(S.chan==='TANA'){if(S.certText){const bits=S.inspect?S.inspect.bits:'?';h+=`<p class="note">${safe(fmt('tanaCertReady',{name:S.certName,bits}))}</p>`;if(S.inspect&&S.inspect.N_str)h+=`<div class="actions"><button class="btn secondary mini" onclick="useCertN()">${safe(t('useCertN'))}</button></div>`;}else h+=`<p class="note warn">${safe(t('loadCertFirst'))}</p>`;}
+ else{const fs=CHAN_FIELDS[S.chan];h+=fs.length===2?`<div class="two"><div>${field(...fs[0],true)}</div><div>${field(...fs[1],true)}</div></div>`:fs.map(f=>field(...f,true)).join('');}
+ $('chan-fields').innerHTML=h;$('btn-chan').textContent=fmt('runChan',{c:dict[lang].chanNames[S.chan]});}
+function selChan(c){S.chan=c;renderChanSeg();updateButtons();}
+function renderStepSeg(){$('step-seg').innerHTML=STEPS.map(s=>`<button class="${S.step===s?'active':''}" onclick="selStep('${s}')">${safe(dict[lang].stepNames[s])}</button>`).join('');const fs=STEP_FIELDS[S.step];$('step-fields').innerHTML=`<div class="two">`+fs.map(f=>`<div>${field(f[0],f[1],f[2],f[3])}</div>`).join('')+`</div>`;}
+function selStep(s){S.step=s;renderStepSeg();updateButtons();}
+function chanReady(){if(!nValid())return false;if(S.chan==='TANA')return !!(S.certText&&S.inspect);return CHAN_FIELDS[S.chan].every(f=>String(S.vals[f[0]]||'').trim()!=='');}
+function stepReady(){if(!nValid())return false;return STEP_FIELDS[S.step].every(f=>!f[3]||String(S.vals[f[0]]||'').trim()!=='');}
+function updateButtons(){const set=(id,en)=>{const el=$(id);if(el)el.disabled=!en;};set('btn-manual',nValid()&&!S.busy.manual);set('btn-chan',chanReady()&&!S.busy.chan);set('btn-step',stepReady()&&!S.busy.step);set('btn-step-ex',true);set('btn-repo',!!$('repo-certs').value&&!S.certBusy);set('btn-example',!S.certBusy);set('btn-paste',$('cert-paste').value.trim()!==''&&!S.certBusy);set('btn-cert',!!S.certText&&!!S.inspect&&!S.certBusy);set('btn-view-chain',!!S.inspect);
+ const anyBusy=S.busy.manual||S.busy.chan||S.busy.step||S.certBusy;$('status-message').textContent=anyBusy?t('busy'):(S.last?t('done'):t('wait'));}
+function useCertN(){if(!S.inspect)return;setN(S.inspect.N_str);}
+function setN(s){$('n').value=s;onNInput();}
+async function runManual(){if(!nValid())return;S.busy.manual=true;updateButtons();try{const r=await bridge('verificar_numero_manual',cleanN($('n').value));S.last={kind:'manual',r};}catch(e){S.last={kind:'error',msg:String(e.message||e)};}finally{S.busy.manual=false;renderResult();renderFlow();updateButtons();}}
+async function runChannel(){if(!chanReady())return;const p={n:cleanN($('n').value),channel:S.chan};if(S.chan==='FACTOR')p.factor=S.vals['f-factor'];if(S.chan==='MODULO')p.modulos=S.vals['f-modulos'];if(S.chan==='TD'){p.p=S.vals['f-p'];p.d=S.vals['f-d'];}if(S.chan==='RESTO')p.residuos=S.vals['f-residuos'];if(S.chan==='TANA')p.certificado=S.certText;
+ S.busy.chan=true;updateButtons();try{const r=await bridge('auditar_numero',p);S.last={kind:'canal',canal:S.chan,r};}catch(e){S.last={kind:'error',msg:String(e.message||e)};}finally{S.busy.chan=false;renderResult();renderFlow();updateButtons();}}
+async function runStep(){if(!stepReady())return;const v=k=>String(S.vals[k]||'').trim();const p={N:cleanN($('n').value),tipo:S.step};if(S.step==='pock'){p.p=v('s-p');p.u=v('s-u');p.a=v('s-a');}else if(S.step==='multi_pock'){p.factores=v('s-factores');}else{p.p=v('s-p');p.u=v('s-u');p.P=v('s-PP');p.Q=v('s-Q');}
+ S.busy.step=true;updateButtons();try{const r=await bridge('verificar_paso_manual',p);S.last={kind:'paso',r};}catch(e){S.last={kind:'error',msg:String(e.message||e)};}finally{S.busy.step=false;renderResult();updateButtons();}}
+function stepExample(){const ex=STEP_EXAMPLES[S.step];for(const [k,v] of Object.entries(ex)){if(k!=='n')S.vals[k]=v;}renderStepSeg();setN(ex.n);}
+function clearAll(){$('n').value='';S.vals={};S.ident=null;S.last=null;EXP.clear();renderAll();}
+/* ---------- Panel 03: results ---------- */
+function renderResult(){const b=$('result-box');const x=S.last;if(!x){b.innerHTML=`<p class="note">${safe(t('resultEmpty'))}</p>`;return;}
+ if(x.kind==='error'){b.innerHTML=`${pill('ERROR')}<p class="koc">${safe(x.msg)}</p>`;return;}
+ const r=x.r||{};
+ if(r.estado==='ENTRADA_INVALIDA'){b.innerHTML=`${pill('ENTRADA_INVALIDA')}<p>${safe(L(r,'error'))}</p>`;return;}
+ if(x.kind==='manual'){let h=`<div class="estado-head">${pill(r.estado)}<span class="note">${safe(t('method'))}: ${safe((dict[lang].methods||{})[r.metodo]||r.metodo)} · ${safe(msTxt(r.tiempo_ms))}</span></div><p>${safe(L(r,'veredicto'))}</p>`;
+  h+=nv('res-N',r.N_str,{label:'N',bits:r.bits,digits:r.digitos,sha:r.sha256_N});
+  if(r.divisor!=null){h+=`<div class="kv"><div>${safe(t('divisor'))}</div><div class="mono">${safe(r.divisor)}</div></div>`+nv('res-q',r.cociente,{label:t('quotient'),bits:bitsOf(r.cociente)});}
+  if(r.testigo!=null)h+=`<div class="kv"><div>${safe(t('witness'))}</div><div class="mono">a = ${safe(r.testigo)}</div></div>`;
+  h+=`<h3 style="margin-top:10px">${safe(t('checks'))}</h3>`+checksTable(r.checks);b.innerHTML=h;return;}
+ if(x.kind==='paso'){let h=`<div class="estado-head">${pill(r.estado)}<span class="note">${safe(t('theorem'))}: ${safe(r.teorema)} · ${safe(msTxt(r.tiempo_ms))}</span></div><p>${safe(L(r,'veredicto'))}</p>`;
+  h+=nv('res-N',r.N_str,{label:'N',bits:r.bits,digits:r.digitos,sha:r.sha256_N});h+=`<h3 style="margin-top:10px">${safe(t('params'))}</h3>`+paramsView('res-par',r.parametros);
+  if(r.premisas&&r.premisas.length)h+=`<h3>${safe(t('premises'))}</h3>`+r.premisas.map((p,j)=>nv('res-prem'+j,p.valor_str,{label:est(p.estado),bits:p.bits})).join('');
+  h+=`<h3>${safe(t('checks'))}</h3>`+checksTable(r.checks);b.innerHTML=h;return;}
+ if(x.kind==='canal'){let h=`<div class="estado-head">${pill(r.estado)}<span class="note">${safe(t('chanResult'))}: ${safe(dict[lang].chanNames[x.canal]||x.canal)}</span></div><p>${safe(L(r,'mensaje'))}</p>`;
+  if(r.N_str)h+=nv('res-N',r.N_str,{label:'N',bits:r.bits,digits:r.digitos,sha:r.sha256_N});
+  if(r.detalles_es||r.detalles_en){const ds=lang==='es'?r.detalles_es:r.detalles_en;if(ds&&ds.length)h+=`<ul class="note">${ds.map(d=>`<li>${safe(d)}</li>`).join('')}</ul>`;}
+  b.innerHTML=h;return;}
+ if(x.kind==='cert'){b.innerHTML=certSummary(true);return;}}
+function certSummary(withBtn){const i=S.inspect;if(!i)return `<p class="note">${safe(t('noCert'))}</p>`;const v=S.verif;const md=i.metadatos||{};
+ const mv=S.certBusy?'EN_CURSO':(v?(v.veredicto_matematico||v.estado):'EN_CURSO');
+ let h=`<div class="estado-head"><span class="note">${safe(t('mathVerdict'))}:</span>${pill(mv==='PRIMO_CERTIFICADO'?'PRIMO_CERTIFICADO':mv)}<span class="note">${safe(t('metaStatus'))}:</span>${pill(i.estado_metadatos)}${S.certBusy?`<span class="note" id="cert-timer"></span>`:''}</div>`;
+ const title=lang==='es'?(md.titulo_es||md.title_en):(md.title_en||md.titulo_es);const issuer=lang==='es'?(md.emisor_es||md.issuer_en):(md.issuer_en||md.emisor_es);
+ if(title)h+=`<p style="font-weight:800;margin:6px 0">${safe(title)}</p>`;
+ if(v&&v.veredicto_matematico==='CERTIFICADO_INVALIDO')h+=`<p class="koc">${safe(t('reason'))}: ${safe(lang==='es'?(v.motivo_es||v.justificacion):(v.motivo_en||v.justificacion_en||v.justificacion))}</p>`;
+ h+=`<div class="kv">${issuer?`<div>${safe(t('issuer'))}</div><div>${safe(issuer)}</div>`:''}<div>${safe(t('file'))}</div><div class="mono">${safe(S.certName||md.archivo||'')}</div>${md.formato?`<div>${safe(t('format'))}</div><div>${safe(md.formato)}</div>`:''}<div>${safe(t('numNodes'))}</div><div>${safe(i.num_nodos)}</div><div>${safe(t('nodeTypes'))}</div><div>${safe(Object.entries(i.resumen_tipos||{}).map(([k,n])=>typeName(k)+' × '+n).join(' · '))}</div>${v&&v.tiempo_ms!=null?`<div>${safe(t('time'))}</div><div>${safe(msTxt(v.tiempo_ms))}</div>`:''}</div>`;
+ h+=nv('cert-N',i.N_str,{label:'N',bits:i.bits,digits:i.digitos,sha:i.sha256_N,shaOk:md.sha256_coincide??null,showDecl:true});
+ if(i.sha256_json)h+=`<div class="num-meta"><b>${safe(t('shaJson'))}</b><span class="hash">${safe(i.sha256_json)}</span><button class="btn secondary mini" onclick="copyText('${i.sha256_json}')">${safe(t('copyHash'))}</button></div>`;
+ if(withBtn)h+=`<div class="actions"><button class="btn secondary" onclick="showTab('chain')">${safe(t('btnViewChain'))}</button></div>`;
+ return h;}
+/* ---------- Panel 02: certificates ---------- */
+function renderCertStatus(){const el=$('cert-status');if(!S.certText){el.textContent='';return;}const i=S.inspect;let s=`${t('loaded')}: ${S.certName}`;if(i)s+=` · ${i.bits} ${t('bits')} · ${i.num_nodos} ${t('nodes')}`;else s+=` · ${t('inspecting')}`;if(S.certBusy)s+=` · ${t('busy')}`;else if(S.verif)s+=` · ${est(S.verif.veredicto_matematico||S.verif.estado)}`;el.textContent=s;}
+async function acceptCert(raw,name){S.certToken++;const tok=S.certToken;S.certText=raw;S.certName=name;S.inspect=null;S.verif=null;S.nodeRes={};EXP.forEach(k=>{if(k.startsWith('cert-')||k.startsWith('nd'))EXP.delete(k);});
+ try{JSON.parse(raw);}catch(e){S.certText=null;S.last={kind:'error',msg:t('errJson')+': '+(e.message||e)};renderAll();return;}
+ renderCertStatus();updateButtons();
+ try{const r=await bridge('inspeccionar_json',raw);if(tok!==S.certToken)return;if(r.estado==='CERTIFICADO_INVALIDO'||r.estado==='ENTRADA_INVALIDA'){S.inspect=null;S.verif=r;S.certText=null;S.last={kind:'error',msg:L(r,'justificacion')||L(r,'error')};renderAll();return;}S.inspect=r;}catch(e){S.last={kind:'error',msg:String(e.message||e)};renderAll();return;}
+ S.last={kind:'cert'};renderAll();await runCert();}
+async function runCert(){if(!S.certText||!S.inspect||S.certBusy)return;const tok=S.certToken;S.certBusy=true;S.verif=null;S.certStart=Date.now();renderAll();const timer=setInterval(()=>{const el=$('cert-timer');if(el)el.textContent=`${((Date.now()-S.certStart)/1000).toFixed(1)} ${t('seconds')} ${t('elapsed')}`;},250);
+ try{const r=await bridge('verificar_json',S.certText);if(tok===S.certToken){S.verif=r;}}catch(e){if(tok===S.certToken)S.verif={estado:'ERROR',veredicto_matematico:'ERROR',justificacion:String(e.message||e),justificacion_en:String(e.message||e)};}
+ finally{clearInterval(timer);if(tok===S.certToken){S.certBusy=false;if(!S.last||S.last.kind==='cert'||S.last.kind==='error')S.last={kind:'cert'};renderAll();}}}
+async function loadRepoCert(){const name=$('repo-certs').value;if(!name)return;try{const r=await bridge('cargar_certificado',name);if(!r||typeof r.contenido!=='string'){S.last={kind:'error',msg:L(r,'error')};renderAll();return;}await acceptCert(r.contenido,r.nombre);}catch(e){S.last={kind:'error',msg:String(e.message||e)};renderAll();}}
+async function loadCertFile(ev){const f=ev.target.files&&ev.target.files[0];if(!f)return;await acceptCert(await f.text(),f.name);}
+function dragOver(ev,on){ev.preventDefault();$('drop').classList.toggle('over',on);}
+async function dropFile(ev){ev.preventDefault();$('drop').classList.remove('over');const f=ev.dataTransfer&&ev.dataTransfer.files&&ev.dataTransfer.files[0];if(f)await acceptCert(await f.text(),f.name);}
+async function usePasted(){const raw=$('cert-paste').value.trim();if(!raw)return;await acceptCert(raw,lang==='es'?'JSON pegado':'Pasted JSON');}
+function loadExample(){return acceptCert(JSON.stringify({N:'71',bits_N:7,arbol:[{tipo:'pinza',n:'5'},{tipo:'pinza',n:'7'},{tipo:'multi_pock',n:'71',ancestros:[{q:'5',a:'2'},{q:'7',a:'2'}]}]}),'example_71.json');}
+async function initRepo(){if(initRepo.busy||initRepo.done)return;initRepo.busy=true;try{const r=await bridge('listar_certificados');initRepo.done=true;S.repoList=r.certificados||[];const sel=$('repo-certs');for(const name of S.repoList){const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);}updateButtons();}catch(e){$('cert-status').textContent=String(e.message||e);}finally{initRepo.busy=false;}}
+/* ---------- Chain view ---------- */
+function renderChain(){const box=$('chain-box');const i=S.inspect;if(!i){box.innerHTML=`<p class="note">${safe(t('noCert'))}</p>`;return;}const v=S.verif;const md=i.metadatos||{};
+ let h=certSummary(false);
+ h+=`<div class="kpis4"><div class="ui3-card"><div class="ui3-k">BITS</div><div class="ui3-v">${safe(i.bits)}</div></div><div class="ui3-card"><div class="ui3-k">${safe(t('digits'))}</div><div class="ui3-v">${safe(i.digitos)}</div></div><div class="ui3-card"><div class="ui3-k">${safe(t('numNodes'))}</div><div class="ui3-v">${safe(i.num_nodos)}</div></div><div class="ui3-card"><div class="ui3-k">TANA</div><div class="ui3-v small">${S.certBusy?safe(t('busy')):safe(est(v?(v.veredicto_matematico||v.estado):'EN_CURSO'))}</div></div><div class="ui3-card"><div class="ui3-k">${safe(t('time'))}</div><div class="ui3-v small">${v&&v.tiempo_ms!=null?safe(msTxt(v.tiempo_ms)):'—'}</div></div></div>`;
+ const yes=b=>b===true?`<span class="okc">✓</span>`:b===false?`<span class="koc">✗</span>`:'—';
+ const mech=lang==='es'?md.mecanismo_es:md.mechanism_en;
+ h+=`<div class="kv">${mech?`<div>${safe(t('mechanism'))}</div><div>${safe(mech)}</div>`:''}${md.version?`<div>${safe(t('version'))}</div><div>${safe(md.version)}</div>`:''}${md.fecha?`<div>${safe(t('date'))}</div><div>${safe(md.fecha)}</div>`:''}${md.motor?`<div>${safe(t('engine'))}</div><div>${safe(md.motor)}</div>`:''}${md.algoritmo_sha256_N?`<div>${safe(t('algoN'))}</div><div class="mono">${safe(md.algoritmo_sha256_N)}</div>`:''}<div>${safe(t('bitsDecl'))}</div><div>${safe(md.bits_declarados??'—')} ${yes(md.bits_coinciden)}</div>${md.uis_p!=null?`<div>${safe(t('uis'))}</div><div>${yes(md.uis_coincide)}</div>`:''}<div>${safe(t('shaTree'))}</div><div><span class="hash">${safe(md.sha256_arbol_calculado||'')}</span> ${yes(md.sha256_arbol_coincide)}</div>${md.veredicto_declarado!=null?`<div>${safe(t('declVerdict'))}</div><div>${safe(md.veredicto_declarado)}</div>`:''}</div>`;
+ if(md.uis_p!=null)h+=nv('cert-uisp',md.uis_p,{label:'p (UIS: N = 2p + d)',bits:bitsOf(md.uis_p)})+`<div class="kv" style="margin:3px 0"><div>d</div><div class="mono">${safe(md.uis_d)}</div></div>`;
+ if(i.notas_metadatos&&i.notas_metadatos.length)h+=`<details><summary>${safe(t('metaNotes'))}</summary><ul class="note">${i.notas_metadatos.map(n=>`<li>${n.ok===true?'✓':n.ok===false?'✗':'·'} ${safe(n[lang])}</li>`).join('')}</ul></details>`;
+ h+=`<details id="raw-json" ontoggle="fillRaw(this)"><summary>${safe(t('rawJson'))}</summary><pre id="raw-pre" style="max-height:360px"></pre></details>`;
+ const nodes=i.nodos_inspeccion||[];const det=(v&&v.detalles)||[];
+ h+=`<h3 style="margin-top:14px">${safe(t('chainTab'))} · ${nodes.length} ${safe(t('nodes'))}</h3>`;
+ h+=nodes.map((nd,k)=>nodeCard(nd,det[k],k,det.length)).join('');
+ box.innerHTML=h;}
+function fillRaw(el){if(el.open){const p=$('raw-pre');if(p&&!p.textContent){let s=S.certText||'';try{s=JSON.stringify(JSON.parse(s),null,1);}catch(e){}p.textContent=s;}}}
+function nodeCard(nd,d,k,nDet){const nr=S.nodeRes[k]||{};let status;
+ if(d)status=d.valido?pill('PRIMO_CERTIFICADO',t('verified')):pill('CERTIFICADO_INVALIDO',t('rejected'));
+ else if(S.certBusy)status=pill('EN_CURSO',t('pending'));
+ else if(S.verif&&nDet>0&&k>=nDet)status=pill('EVIDENCIA_INSUFICIENTE',t('notReached'));
+ else status=pill('EVIDENCIA_INSUFICIENTE',t('pending'));
+ const rule=lang==='es'?nd.regla:(ruleName(nd.regla_en||nd.regla));
+ let h=`<div class="node-card"><div class="node-head"><div class="t"><b>#${String(k+1).padStart(2,'0')}</b>${safe(typeName(nd.tipo))}${rule?` <span class="note">· ${safe(t('rule'))}: ${safe(rule)}</span>`:''}</div><div>${status}<span class="note"> ${safe(nd.bits??'?')} ${safe(t('bits'))}${d&&d.tiempo_ms!=null?' · '+safe(msTxt(d.tiempo_ms)):''}</span></div></div>`;
+ if(nd.n_str!=null)h+=nv(`nd${k}-n`,nd.n_str,{label:'n',bits:nd.bits,digits:nd.digitos,sha:nd.sha256_n,shaLabel:t('shaNode')});else h+=`<p class="koc">${safe(nd['error_'+lang]||'')}</p>`;
+ const params=(nr.res&&nr.res.parametros)||(d&&d.parametros)||nd.parametros;
+ if(params&&Object.keys(params).length)h+=`<details${nr.paramsOpen?' open':''} ontoggle="S.nodeRes[${k}]=Object.assign(S.nodeRes[${k}]||{},{paramsOpen:this.open})"><summary>${safe(t('params'))}</summary>${paramsView(`nd${k}-p`,params)}</details>`;
+ h+=`<div class="actions"><button class="btn primary mini" onclick="verifyNode(${k})" ${nr.busy?'disabled':''}>${safe(nr.busy?t('verifyingNode'):t('verifyNode'))}</button>${nd.n_str!=null?`<button class="btn secondary mini" onclick="auditNodeN(${k})">${safe(t('auditNodeN'))}</button>`:''}${nr.res&&nr.open?`<button class="btn secondary mini" onclick="hideNode(${k})">${safe(t('hideNode'))}</button>`:''}</div>`;
+ if(nr.res&&nr.open)h+=nodeResult(nr.res);
+ return h+'</div>';}
+function nodeResult(r){if(r.estado==='CERTIFICADO_INVALIDO'||r.estado==='ENTRADA_INVALIDA'||r.estado==='ERROR')return `<div class="node-res">${pill(r.estado)} <span>${safe(L(r,'justificacion')||L(r,'error'))}</span></div>`;
+ const yes=b=>b?`<span class="okc">✓ ${safe(t('ok'))}</span>`:`<span class="koc">✗ ${safe(t('fail'))}</span>`;
+ return `<div class="node-res"><p style="margin:0 0 6px">${safe(L(r,'veredicto'))}</p><div class="kv"><div>${safe(t('theorem'))}</div><div>${safe(r.teorema||'')}</div><div>${safe(t('nodeMath'))}</div><div>${yes(r.nodo_matematicamente_valido)}</div><div>${safe(t('nodeDep'))}</div><div>${yes(r.dependencia_ancestros_valida)}</div><div>${safe(t('time'))}</div><div>${safe(msTxt(r.tiempo_ms))}</div></div>${checksTable(r.checks)}${checksTable(r.checks_dependencia)}</div>`;}
+async function verifyNode(k){if(!S.certText)return;const tok=S.certToken;S.nodeRes[k]=Object.assign(S.nodeRes[k]||{},{busy:true});renderChain();try{const r=await bridge('verificar_nodo',{contenido:S.certText,indice:k});if(tok!==S.certToken)return;S.nodeRes[k]=Object.assign(S.nodeRes[k]||{},{busy:false,res:r,open:true});}catch(e){if(tok!==S.certToken)return;S.nodeRes[k]=Object.assign(S.nodeRes[k]||{},{busy:false,open:true,res:{estado:'ERROR',justificacion:String(e.message||e)}});}renderChain();}
+function hideNode(k){if(S.nodeRes[k])S.nodeRes[k].open=false;renderChain();}
+function auditNodeN(k){const nd=S.inspect&&S.inspect.nodos_inspeccion[k];if(!nd)return;setN(nd.n_str);showTab('audit');$('panel-01').scrollIntoView({behavior:'smooth',block:'start'});}
+initEmblems();applyStatic();renderAll();window.addEventListener('pywebviewready',initRepo);if(window.pywebview&&window.pywebview.api)initRepo();
 </script>
 </body>
 </html>
@@ -518,87 +839,243 @@ initEmblems();setLang('es');renderChain({});window.addEventListener('pywebviewre
 if hasattr(sys, "set_int_max_str_digits"):
     sys.set_int_max_str_digits(0)
 
-CHANNELS = {"FACTOR", "MODULO", "PINZA", "TD", "RESTO"}
+# Channels with a real public implementation (buttons in the UI).
+CHANNELS = {"FACTOR", "MODULO", "TD", "RESTO", "TANA"}
+# PINZA is kept only for API/CLI backward compatibility: it reports, without
+# error, that the private engine is not part of this public verifier.
+CHANNELS_COMPAT = CHANNELS | {"PINZA"}
 CERT_DIR = Path(__file__).resolve().parents[1] / "certificates"
 
 
 def parse_int(value, label, optional=False):
-    s = str(value if value is not None else "").strip()
-    if not s and optional:
-        return None
-    digits = s.lstrip("+-")
-    if not digits or not digits.isascii() or not digits.isdigit():
-        raise ValueError(f"{label}: expected a decimal integer")
-    return int(s)
+    """Exact integer from UI text: internal whitespace (line breaks of pasted
+    giant numbers) is removed; everything else must be ^[+-]?[0-9]+$."""
+    if isinstance(value, bool):
+        raise EnteroInvalido(f"{label}: un booleano no es un entero", f"{label}: a boolean is not an integer")
+    if isinstance(value, int):
+        return value
+    s = re.sub(r"\s+", "", str(value if value is not None else ""))
+    if not s:
+        if optional:
+            return None
+        raise EnteroInvalido(f"{label}: falta el valor", f"{label}: value missing")
+    return entero_estricto(s, label)
 
 
 def parse_list(value, label):
+    if isinstance(value, list):
+        return [parse_int(v, label) for v in value]
     if not str(value or "").strip():
         return []
-    return [parse_int(part, label) for part in str(value).split(",")]
+    return [parse_int(part, label) for part in str(value).replace(";", ",").split(",") if part.strip()]
+
+
+def _corto(x, n=40):
+    s = str(x)
+    return s if len(s) <= n else f"{s[:18]}…{s[-8:]} ({int(s).bit_length() if s.lstrip('-').isdigit() else '?'} bits)"
+
+
+def _texto_json(raw):
+    if isinstance(raw, dict):
+        return json.dumps(raw, ensure_ascii=False), raw
+    if not isinstance(raw, str):
+        raise EnteroInvalido("se requiere el texto JSON del certificado", "the certificate JSON text is required")
+    try:
+        return raw, json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise EnteroInvalido(f"JSON mal formado: {exc}", f"malformed JSON: {exc}") from exc
+
+
+def _inspect_cert(raw):
+    texto, cert = _texto_json(raw)
+    info = inspeccionar_certificado(cert, texto.encode("utf-8"))
+    info["estado"] = "INSPECCIONADO"
+    return info
 
 
 def _verify_cert(raw):
-    if not isinstance(raw, str):
-        raise ValueError("JSON text required")
-    cert = json.loads(raw)
-    proof = verificar_certificado_tana(cert)
-    return {"estado": "PRIMO_POR_DESCARTE", "justificacion": "Exact deterministic TANA certificate verified", **proof}
+    texto, cert = _texto_json(raw)
+    try:
+        rep = verificar_certificado_tana(cert, raw=texto.encode("utf-8"))
+        rep.update({"estado": "PRIMO_POR_DESCARTE",
+                    "justificacion": f"Certificado TANA determinista verificado: {rep['nodos']} nodos, {rep['bits']} bits",
+                    "justificacion_en": f"Deterministic TANA certificate verified: {rep['nodos']} nodes, {rep['bits']} bits"})
+        return rep
+    except CertificadoInvalido as exc:
+        rep = dict(exc.informe or {})
+        rep.pop("nodos_inspeccion", None)
+        rep.update({"estado": "CERTIFICADO_INVALIDO", "veredicto_matematico": "CERTIFICADO_INVALIDO", "primo_certificado": False,
+                    "justificacion": exc.es, "justificacion_en": exc.en})
+        return rep
+
+
+def _verify_node(payload):
+    if not isinstance(payload, dict):
+        raise EnteroInvalido("se esperaba {contenido, indice}", "expected {contenido, indice}")
+    _, cert = _texto_json(payload.get("contenido"))
+    return verificar_nodo_certificado(cert, payload.get("indice"), bool(payload.get("profundo", False)))
+
+
+def _mensaje(estado, es, en, ident, **extra):
+    out = {"estado": estado, "mensaje_es": es, "mensaje_en": en, "justificacion": es, "justificacion_en": en}
+    out.update(ident)
+    out.update(extra)
+    return out
+
+
+def _canal_tana(n, raw, ident):
+    if raw is None or (isinstance(raw, str) and not raw.strip()):
+        raise EnteroInvalido("TANA: carga o pega primero un certificado JSON", "TANA: load or paste a JSON certificate first")
+    texto, cert = _texto_json(raw)
+    info = inspeccionar_certificado(cert)
+    Nc = int(info["N_str"])
+    if Nc != n:
+        return _mensaje("EVIDENCIA_INSUFICIENTE",
+                        f"El certificado prueba otro entero ({info['bits']} bits, SHA-256 {info['sha256_N'][:16]}…), no este N. No aporta evidencia para N.",
+                        f"The certificate proves a different integer ({info['bits']} bits, SHA-256 {info['sha256_N'][:16]}…), not this N. It gives no evidence for N.",
+                        ident, canal="TANA")
+    try:
+        rep = verificar_certificado_tana(cert, objetivo=n, raw=texto.encode("utf-8"))
+    except CertificadoInvalido as exc:
+        return _mensaje("CERTIFICADO_INVALIDO", f"El certificado no prueba N: {exc.es}", f"The certificate does not prove N: {exc.en}", ident, canal="TANA")
+    return _mensaje("PRIMO_POR_DESCARTE",
+                    f"N es primo: certificado TANA verificado para este N exacto ({rep['nodos']} nodos, {rep['bits']} bits, {rep['tiempo_ms']:.1f} ms).",
+                    f"N is prime: TANA certificate verified for this exact N ({rep['nodos']} nodes, {rep['bits']} bits, {rep['tiempo_ms']:.1f} ms).",
+                    ident, canal="TANA", estado_metadatos=rep["estado_metadatos"])
 
 
 def _audit_numero(payload):
+    if not isinstance(payload, dict):
+        raise EnteroInvalido("se esperaba un objeto", "an object was expected")
     n = parse_int(payload.get("n"), "N")
     channel = payload.get("channel")
-    if channel is not None and channel not in CHANNELS:
-        raise ValueError("Unknown evidence channel")
-    factor = parse_int(payload.get("factor"), "factor", True) if channel in (None, "FACTOR") else None
-    p = parse_int(payload.get("p"), "p", True) if channel in (None, "TD") else None
-    d = parse_int(payload.get("d"), "d", True) if channel in (None, "TD") else None
-    modulos = parse_list(payload.get("modulos"), "modulos") if channel in (None, "MODULO") else []
-    residuos = parse_list(payload.get("residuos"), "residuos") if channel in (None, "RESTO") else []
-    # The auditor always calls PINZA internally. A missing optional canal_bits
-    # must be reported by the engine, not replaced by a UI assertion.
+    if channel is not None and channel not in CHANNELS_COMPAT:
+        raise EnteroInvalido(f"vía desconocida: {channel}", f"unknown channel: {channel}")
+    ident = identidad_entero(n)
+    if channel == "TANA":
+        return _canal_tana(n, payload.get("certificado"), ident)
+    if channel == "PINZA":
+        return _mensaje("EVIDENCIA_INSUFICIENTE", "PINZA pertenece al motor privado OM337 y no está incluida en este verificador público.",
+                        "PINZA belongs to the private OM337 engine and is not included in this public verifier.", ident, canal="PINZA")
+    need = lambda c: channel in (None, c)
+    factor = parse_int(payload.get("factor"), "factor", channel != "FACTOR") if need("FACTOR") else None
+    p = parse_int(payload.get("p"), "p", channel != "TD") if need("TD") else None
+    d = parse_int(payload.get("d"), "d", channel != "TD") if need("TD") else None
+    modulos = parse_list(payload.get("modulos"), "modulos") if need("MODULO") else []
+    residuos = parse_list(payload.get("residuos"), "residuos") if need("RESTO") else []
+    if channel == "MODULO" and not modulos:
+        raise EnteroInvalido("MÓDULO: introduce al menos un módulo", "MODULO: enter at least one modulus")
+    if channel == "RESTO" and not residuos:
+        raise EnteroInvalido("RESTO: introduce al menos un divisor", "REMAINDER: enter at least one divisor")
     res = auditar(n, factor=factor, p=p, d=d, modulos=modulos, residuos=residuos)
-    evidence = [{"via":e.via, "afirmacion":e.afirmacion, "concluyente":e.concluyente, "descarte":e.descarte, "datos":str(e.datos)} for e in res.evidencias]
+    estado = res.estado.value
+    det_es, det_en = [], []
+    if channel == "FACTOR":
+        if estado == "COMPUESTO_VERIFICADO":
+            es = f"{_corto(factor)} divide a N exactamente: N = {_corto(factor)} · {_corto(n // factor)}. Compuesto verificado."
+            en = f"{_corto(factor)} divides N exactly: N = {_corto(factor)} · {_corto(n // factor)}. Verified composite."
+        else:
+            r = n % factor if factor else None
+            es = f"{_corto(factor)} no es un divisor no trivial de N" + (f" (N mod {_corto(factor)} = {_corto(r)})" if r is not None else "") + ". Esta vía no establece composición."
+            en = f"{_corto(factor)} is not a nontrivial divisor of N" + (f" (N mod {_corto(factor)} = {_corto(r)})" if r is not None else "") + ". This channel establishes no compositeness."
+    elif channel in ("MODULO", "RESTO"):
+        lista = modulos if channel == "MODULO" else residuos
+        for m in lista[:12]:
+            r = n % m if m else None
+            det_es.append(f"N mod {_corto(m)} = {_corto(r)}" if r is not None else f"{m}: módulo cero no válido")
+            det_en.append(f"N mod {_corto(m)} = {_corto(r)}" if r is not None else f"{m}: zero modulus is not valid")
+        if estado == "COMPUESTO_VERIFICADO":
+            m = next(x for x in lista if 1 < x < n and n % x == 0)
+            es = f"N ≡ 0 (mod {_corto(m)}): {_corto(m)} divide a N. Compuesto verificado."
+            en = f"N ≡ 0 (mod {_corto(m)}): {_corto(m)} divides N. Verified composite."
+        else:
+            es = "Ningún valor suministrado es divisor no trivial de N. Esta vía no establece composición."
+            en = "No supplied value is a nontrivial divisor of N. This channel establishes no compositeness."
+    elif channel == "TD":
+        if estado == "CONTRADICCION_DETECTADA":
+            es = f"2p + d = {_corto(2 * p + d)} ≠ N: la identidad declarada es falsa (contradicción)."
+            en = f"2p + d = {_corto(2 * p + d)} ≠ N: the declared identity is false (contradiction)."
+        else:
+            es = "Identidad N = 2p + d verificada exactamente. Es una relación algebraica: por sí sola no prueba primalidad."
+            en = "Identity N = 2p + d verified exactly. It is an algebraic relation: on its own it does not prove primality."
+    else:
+        es = f"Auditoría combinada: {res.justificacion}"
+        en = f"Combined audit: {res.justificacion}"
+    evidence = [{"via": e.via, "afirmacion": e.afirmacion, "concluyente": e.concluyente, "descarte": e.descarte,
+                 "datos": str(e.datos)} for e in res.evidencias]
     if channel is not None:
-        wanted = {"FACTOR":"factor", "MODULO":"modulo", "PINZA":"pinza", "TD":"td", "RESTO":"remainder"}[channel]
+        wanted = {"FACTOR": "factor", "MODULO": "modulo", "TD": "td", "RESTO": "remainder"}[channel]
         evidence = [e for e in evidence if e["via"] == wanted]
-    return {"estado":res.estado.value, "justificacion":res.justificacion,
-            "bits":n.bit_length(), "evidencias":evidence, "canal":channel}
+    return _mensaje(estado, es, en, ident, canal=channel, evidencias=evidence, detalles_es=det_es, detalles_en=det_en)
+
+
+def _error(exc, estado="ENTRADA_INVALIDA"):
+    es = getattr(exc, "es", None) or str(exc)
+    en = getattr(exc, "en", None) or str(exc)
+    return {"estado": estado, "error_es": es, "error_en": en, "justificacion": es, "justificacion_en": en}
 
 
 class ApiAuditor:
+    """pywebview bridge. Every public method takes 0 or 1 argument and always
+    returns a JSON-serializable dict (errors are returned, never raised)."""
+
     def __init__(self):
-        self.pool = ThreadPoolExecutor(max_workers=2)
+        self._pool = ThreadPoolExecutor(max_workers=4)
+
+    def _run(self, fn, *args, estado="ENTRADA_INVALIDA"):
+        try:
+            return self._pool.submit(fn, *args).result()
+        except CertificadoInvalido as exc:
+            return _error(exc, "CERTIFICADO_INVALIDO")
+        except Exception as exc:
+            return _error(exc, estado)
 
     def listar_certificados(self):
-        return {"certificados":sorted(p.name for p in CERT_DIR.glob("*.json") if p.is_file())}
+        def clave(nombre):
+            m = re.search(r"_(\d+)bits_", nombre)
+            return (int(m.group(1)) if m else 0, nombre)
+        nombres = sorted((p.name for p in CERT_DIR.glob("*.json") if p.is_file()), key=clave)
+        return {"certificados": nombres, "total": len(nombres)}
 
     def cargar_certificado(self, nombre):
         if not isinstance(nombre, str) or Path(nombre).name != nombre or not nombre.endswith(".json"):
-            raise ValueError("Invalid certificate name")
+            return _error(EnteroInvalido("nombre de certificado no válido", "invalid certificate name"))
         path = CERT_DIR / nombre
         if not path.is_file():
-            raise FileNotFoundError(nombre)
-        return {"nombre":nombre, "contenido":path.read_text(encoding="utf-8")}
+            return _error(EnteroInvalido(f"no existe: {nombre}", f"not found: {nombre}"))
+        return {"nombre": nombre, "contenido": path.read_text(encoding="utf-8")}
+
+    def inspeccionar_json(self, contenido_json):
+        return self._run(_inspect_cert, contenido_json, estado="CERTIFICADO_INVALIDO")
 
     def verificar_json(self, contenido_json):
-        try:
-            return self.pool.submit(_verify_cert, contenido_json).result()
-        except Exception as exc:
-            return {"estado":"CERTIFICADO_INVALIDO", "justificacion":str(exc)}
+        return self._run(_verify_cert, contenido_json, estado="CERTIFICADO_INVALIDO")
+
+    def verificar_nodo(self, payload):
+        return self._run(_verify_node, payload, estado="CERTIFICADO_INVALIDO")
+
+    def identidad_numero(self, n):
+        return self._run(lambda v: identidad_entero(parse_int(v, "N")), n)
+
+    def verificar_numero_manual(self, n):
+        return self._run(lambda v: verificar_numero_manual(parse_int(v, "N")), n)
+
+    def verificar_paso_manual(self, payload):
+        def fn(p):
+            if isinstance(p, dict) and p.get("N") is not None and not isinstance(p.get("N"), int):
+                p = {**p, "N": parse_int(p.get("N"), "N")}
+            return verificar_paso_manual(p)
+        return self._run(fn, payload)
 
     def auditar_numero(self, payload):
-        try:
-            return self.pool.submit(_audit_numero, payload).result()
-        except Exception as exc:
-            return {"estado":"ENTRADA_INVALIDA", "justificacion":str(exc)}
+        return self._run(_audit_numero, payload)
 
 
 def main():
     import webview
-    webview.create_window('SPARTACO / OM337 — Auditor Determinista', html=HTML, js_api=ApiAuditor(), width=1280, height=820, min_size=(900,620))
+    webview.create_window('SPARTACO / OM337 — Auditor Determinista', html=HTML, js_api=ApiAuditor(), width=1320, height=860, min_size=(900, 620))
     webview.start(debug=False)
+
 
 if __name__ == '__main__':
     main()
