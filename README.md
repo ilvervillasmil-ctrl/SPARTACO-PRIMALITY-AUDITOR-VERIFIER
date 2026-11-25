@@ -58,6 +58,7 @@ Its components serve distinct purposes within a common technological framework.
 The auditor is freely available as a public verification instrument. The underlying proprietary technologies remain separate from its distribution.
 
 ---
+<img width="1306" height="847" alt="image" src="https://github.com/user-attachments/assets/c2616b79-5cb8-4901-9cd3-dbe2171d5438" />
 
 ## Mathematics you can verify
 
