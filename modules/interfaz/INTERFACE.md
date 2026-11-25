@@ -23,6 +23,8 @@ The interface is the screen of the auditor. It lets a user run every evidence ch
 | **Execution model** | Local, offline, no network access required |
 | **Languages** | English and Spanish, switchable at any time |
 
+<img width="1320" height="760" alt="image" src="https://github.com/user-attachments/assets/9038efb2-bc8e-4d90-af6a-099ee825fa6e" />
+
 ## 2. What the interface does
 
 - Exposes the **six evidence channels** of the auditor as separate controls, each with a short description.
@@ -38,6 +40,8 @@ The interface is the screen of the auditor. It lets a user run every evidence ch
 - It does not generate primes and does not access the proprietary OM337 or UIS–OMEGA engines.
 - It does not accept a prime label, an engine status or any external declaration as proof.
 - It does not claim that an arbitrary integer is prime without a verified certificate.
+
+<img width="1039" height="915" alt="image" src="https://github.com/user-attachments/assets/7d3567f6-8dd6-4efe-ad10-c37ce1836621" />
 
 ## 4. Screen layout
 
@@ -62,6 +66,8 @@ Each channel can be run separately from its own button. **AUDIT N** runs all of 
 | **TANA** | A JSON certificate | Verifies a deterministic primality certificate through a finite proof chain (section 7) |
 
 The auditor processes contradictions first, then compositeness evidence, then the certificate. Without a verifiable exclusion, it does not assert primality.
+
+<img width="1320" height="1314" alt="image" src="https://github.com/user-attachments/assets/06bdabaf-113e-497f-beb3-7f1c20785400" />
 
 ## 6. Verdicts
 
