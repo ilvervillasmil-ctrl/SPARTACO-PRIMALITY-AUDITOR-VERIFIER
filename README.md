@@ -41,6 +41,8 @@ Its components serve distinct purposes within a common technological framework.
                Public · Free · Offline
 ```
 
+<img width="1320" height="1563" alt="image" src="https://github.com/user-attachments/assets/84ec290f-f259-4b9b-b2b7-e1a29806a2a7" />
+
 ### Core Technologies
 
 **OM337 — Cryptographic Engine.** A specialized cryptographic component operating on structured bit transformations, with defined encryption and decryption procedures.
