@@ -358,31 +358,6 @@ input::placeholder,textarea::placeholder{color:#5b6b82}
   .route,.audit-kpis,.kpis4{grid-template-columns:minmax(0,1fr)}
   .hero{padding:22px 12px}
 }
-/* Auditor: tarjetas de comprobación sin recortar fórmulas. */
-@media (max-width:900px){
-  .node-card,.node-res,.chk{min-width:0;max-width:100%}
-  .node-head>*{min-width:0;overflow-wrap:anywhere}
-  .kv>div{min-width:0;overflow-wrap:anywhere}
-  .chk{display:block;width:100%;border-collapse:separate}
-  .chk tbody{display:block;width:100%}
-  .chk tr{display:grid;grid-template-columns:max-content minmax(0,1fr);
-    gap:4px 8px;margin:0 0 8px;padding:9px;border:1px solid var(--border);border-radius:9px}
-  .chk tr:first-child{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
-    overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}
-  .chk td{display:block;min-width:0;padding:0;border:0;line-height:1.5}
-  .chk td.mono{white-space:nowrap;color:var(--cyan);font-weight:700}
-  .chk td.f,.chk td.d{grid-column:1/-1;white-space:normal;overflow-wrap:anywhere;word-break:normal}
-  .chk td.f{font-size:13px}
-  .chk td.d{font-size:12px}
-  .chk td.d:empty{display:none}
-}
-@media (max-width:480px){
-  .node-card{padding:8px}
-  .node-res{padding:8px}
-  .chk tr{padding:8px}
-  .node-res .kv{gap:2px}
-  .node-res .kv>div:nth-child(even){margin-bottom:6px}
-}
 </style>
 <script>
 /* =====================================================================
