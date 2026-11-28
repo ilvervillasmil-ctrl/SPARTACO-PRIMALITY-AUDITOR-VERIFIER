@@ -359,14 +359,17 @@ input::placeholder,textarea::placeholder{color:#5b6b82}
   .hero{padding:22px 12px}
 }
 
-/* Correccion localizada: conservar tabla y encabezados. */
+/* Mobile: formula and exact detail on separate full-width lines. */
 @media (max-width:900px){
-  .chk{table-layout:fixed}
-  .chk th:first-child{width:24px}
-  .chk th:nth-child(2){width:54px}
-  .chk td:nth-child(2){white-space:normal;overflow-wrap:anywhere}
-  .chk td.f,.chk td.d{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
-  .chk td,.chk th{padding:4px;overflow-wrap:anywhere}
+  .node-card,.node-res,.numbox,.num-meta{min-width:0;max-width:100%}
+  .chk,.chk tbody{display:block;width:100%;min-width:0;max-width:100%}
+  .chk tr:first-child{display:none}
+  .chk tr{display:grid;grid-template-columns:24px minmax(0,1fr);gap:4px 8px;padding:10px 0;border-top:1px solid var(--border)}
+  .chk td{display:block;min-width:0;max-width:100%;padding:0;border:0}
+  .chk td.mono{white-space:nowrap}
+  .chk td.f,.chk td.d{grid-column:1/-1;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+  .chk td.d{word-break:break-all;line-height:1.5}
+  .num-meta .hash{min-width:0;max-width:100%;overflow-wrap:anywhere}
 }
 </style>
 <script>
