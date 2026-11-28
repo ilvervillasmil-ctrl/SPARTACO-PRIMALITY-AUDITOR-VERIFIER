@@ -358,6 +358,16 @@ input::placeholder,textarea::placeholder{color:#5b6b82}
   .route,.audit-kpis,.kpis4{grid-template-columns:minmax(0,1fr)}
   .hero{padding:22px 12px}
 }
+
+/* Correccion localizada: conservar tabla y encabezados. */
+@media (max-width:900px){
+  .chk{table-layout:fixed}
+  .chk th:first-child{width:24px}
+  .chk th:nth-child(2){width:54px}
+  .chk td:nth-child(2){white-space:normal;overflow-wrap:anywhere}
+  .chk td.f,.chk td.d{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  .chk td,.chk th{padding:4px;overflow-wrap:anywhere}
+}
 </style>
 <script>
 /* =====================================================================
